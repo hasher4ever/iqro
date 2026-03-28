@@ -1,0 +1,48 @@
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, spacing, fontSize, fontWeight } from '../lib/theme';
+
+interface ScreenHeaderProps {
+title: string;
+onBack: () => void;
+rightAction?: React.ReactNode;
+}
+
+export function ScreenHeader({ title, onBack, rightAction }: ScreenHeaderProps) {
+return (
+<View style={styles.header}>
+<TouchableOpacity onPress={onBack} style={styles.backBtn}>
+<Ionicons name="chevron-back" size={28} color={colors.primary} />
+</TouchableOpacity>
+<Text style={styles.title} numberOfLines={1}>{title}</Text>
+<View style={styles.rightSlot}>
+{rightAction || null}
+</View>
+</View>
+);
+}
+
+const styles = StyleSheet.create({
+header: {
+flexDirection: 'row',
+alignItems: 'center',
+paddingHorizontal: spacing.lg,
+paddingVertical: spacing.md,
+},
+backBtn: {
+width: 40,
+alignItems: 'flex-start',
+},
+title: {
+flex: 1,
+textAlign: 'center',
+fontSize: fontSize.lg,
+fontWeight: fontWeight.bold,
+color: colors.text,
+},
+rightSlot: {
+width: 40,
+alignItems: 'flex-end',
+},
+});
