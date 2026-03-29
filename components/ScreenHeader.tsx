@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { colors, spacing, fontSize, fontWeight } from '../lib/theme';
+import { colors, spacing, fontSize, fontWeight, useTheme } from '../lib/theme';
 
 interface ScreenHeaderProps {
 title: string;
@@ -10,6 +10,8 @@ rightAction?: React.ReactNode;
 }
 
 export function ScreenHeader({ title, onBack, rightAction }: ScreenHeaderProps) {
+useTheme(); // subscribe to theme changes
+const styles = getStyles();
 return (
 <View style={styles.header}>
 <TouchableOpacity onPress={onBack} style={styles.backBtn}>
@@ -23,7 +25,8 @@ return (
 );
 }
 
-const styles = StyleSheet.create({
+function getStyles() {
+return StyleSheet.create({
 header: {
 flexDirection: 'row',
 alignItems: 'center',
@@ -46,3 +49,4 @@ width: 40,
 alignItems: 'flex-end',
 },
 });
+}

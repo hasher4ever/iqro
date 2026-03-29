@@ -11,11 +11,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 const PAGE_SIZE = 20;
 
-const NOTIFICATION_CONFIG: Record<string, { icon: string; color: string }> = {
+function getNotificationConfig(): Record<string, { icon: string; color: string }> {
+return {
 attendance_marked: { icon: 'checkmark-circle', color: colors.primary },
 attendance_marked_batch: { icon: 'people', color: colors.primary },
-grade_added: { icon: 'star', color: '#F59E0B' },
-grade_edited: { icon: 'create', color: '#F59E0B' },
+grade_added: { icon: 'star', color: colors.warning },
+grade_edited: { icon: 'create', color: colors.warning },
 payment_recorded: { icon: 'cash', color: colors.success },
 payment_confirmed: { icon: 'checkmark-done', color: colors.success },
 payment_reversed: { icon: 'arrow-undo', color: colors.error },
@@ -27,11 +28,12 @@ enrollment_approved: { icon: 'checkmark-circle', color: colors.success },
 enrollment_rejected: { icon: 'close-circle', color: colors.error },
 teacher_payment: { icon: 'wallet', color: colors.success },
 role_changed: { icon: 'shield', color: colors.info },
-user_status_changed: { icon: 'toggle', color: '#F59E0B' },
+user_status_changed: { icon: 'toggle', color: colors.warning },
 user_archived: { icon: 'archive', color: colors.textSecondary },
 user_created: { icon: 'person-add', color: colors.primary },
-password_reset: { icon: 'key', color: '#F59E0B' },
+password_reset: { icon: 'key', color: colors.warning },
 };
+}
 
 function getNotificationText(type: string, data: any): { title: string; body: string } {
 const d = data || {};
@@ -106,7 +108,8 @@ await markAsRead({ notificationId: id });
 };
 
 const renderItem = ({ item }: any) => {
-const config = NOTIFICATION_CONFIG[item.type] || { icon: 'notifications', color: colors.textSecondary };
+const notificationConfig = getNotificationConfig();
+const config = notificationConfig[item.type] || { icon: 'notifications', color: colors.textSecondary };
 const { title, body } = getNotificationText(item.type, item.data);
 
 return (

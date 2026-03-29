@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
+import { colors, spacing, fontSize, fontWeight, borderRadius, useTheme } from '../../lib/theme';
 import { t } from '../../lib/i18n';
 import { getTashkentNow, formatMoney } from '../../lib/utils';
 import { SectionTitle, EmptyState, ScreenLoader, Badge } from '../../components/UI';
@@ -11,10 +11,12 @@ import { NotificationBell } from '../../components/NotificationBell';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function TeacherDashboard({ navigation }: any) {
+useTheme();
+const s = getStyles();
 const me = useQuery(api.users.me);
 const classes = useQuery(api.classes.getByTeacher, {});
 const pendingTx = useQuery(api.transactions.listTransactions, { status: 'pending' });
-const earnings = useQuery(api.finances.getTeacherEarnings);
+const earnings = useQuery(api.finances.getTeacherEarnings, { period: "month" });
 if (classes === undefined) return <ScreenLoader />;
 
 const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
@@ -91,11 +93,11 @@ onPress={() => navigation.navigate('ClassDetail', { classId: currentClass._id, c
 <Text style={s.liveSub}>{currentClass.subjectName} • {currentClass.roomName}</Text>
 <View style={s.liveActions}>
 <TouchableOpacity style={s.liveBtn} onPress={() => navigation.navigate('AttendanceScreen', { classId: currentClass._id, className: currentClass.name })}>
-<Ionicons name="checkmark-circle-outline" size={16} color="#fff" />
+<Ionicons name="checkmark-circle-outline" size={16} color={colors.textInverse} />
 <Text style={s.liveBtnText}>{t('attendance')}</Text>
 </TouchableOpacity>
 <TouchableOpacity style={s.liveBtn} onPress={() => navigation.navigate('GradesScreen', { classId: currentClass._id, className: currentClass.name })}>
-<Ionicons name="star-outline" size={16} color="#fff" />
+<Ionicons name="star-outline" size={16} color={colors.textInverse} />
 <Text style={s.liveBtnText}>{t('grades')}</Text>
 </TouchableOpacity>
 </View>
@@ -177,7 +179,7 @@ return (
 );
 }
 
-const s = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
 container: { flex: 1, backgroundColor: colors.background },
 content: { padding: spacing.lg, paddingBottom: 100 },
 headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: spacing.lg },
@@ -187,14 +189,14 @@ profileBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.s
 liveCard: { backgroundColor: colors.primary, borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.lg },
 liveBadgeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
 liveBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.error, borderRadius: borderRadius.full, paddingHorizontal: spacing.sm, paddingVertical: 3 },
-liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#fff', marginRight: 4 },
-liveBadgeText: { fontSize: fontSize.xs, fontWeight: fontWeight.bold, color: '#fff' },
-liveTime: { fontSize: fontSize.sm, color: 'rgba(255,255,255,0.8)' },
-liveClassName: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: '#fff' },
-liveSub: { fontSize: fontSize.sm, color: 'rgba(255,255,255,0.7)', marginTop: 2, marginBottom: spacing.md },
+liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.textInverse, marginRight: 4 },
+liveBadgeText: { fontSize: fontSize.xs, fontWeight: fontWeight.bold, color: colors.textInverse },
+liveTime: { fontSize: fontSize.sm, color: colors.textInverse, opacity: 0.8 },
+liveClassName: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: colors.textInverse },
+liveSub: { fontSize: fontSize.sm, color: colors.textTertiary, opacity: 0.7, marginTop: 2, marginBottom: spacing.md },
 liveActions: { flexDirection: 'row', gap: spacing.sm },
-liveBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: 4 },
-liveBtnText: { fontSize: fontSize.xs, fontWeight: fontWeight.semibold, color: '#fff' },
+liveBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.textInverse + '33', borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: 4 },
+liveBtnText: { fontSize: fontSize.xs, fontWeight: fontWeight.semibold, color: colors.textInverse },
 courseCard: { backgroundColor: colors.surface, borderRadius: borderRadius.lg, padding: spacing.md, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.borderLight },
 courseCardLive: { borderColor: colors.primary, borderWidth: 2 },
 courseHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.xs },
@@ -219,4 +221,4 @@ earningStat: { flex: 1, alignItems: 'center' },
 earnDivider: { width: 1, height: 30, backgroundColor: colors.borderLight },
 earningsStatLabel: { fontSize: 10, fontWeight: fontWeight.medium, color: colors.textTertiary, marginBottom: 2, textAlign: 'center' },
 earningsStatValue: { fontSize: fontSize.md, fontWeight: fontWeight.bold },
-});
+}); }

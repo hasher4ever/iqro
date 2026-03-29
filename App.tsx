@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
+import { Text, View, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Authenticated, Unauthenticated, AuthLoading } from 'convex/react';
 import { useQuery } from 'convex/react';
 import { api } from './convex/_generated/api';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { colors, fontSize, fontWeight, spacing, borderRadius } from './lib/theme';
+import { fontSize, fontWeight, spacing, borderRadius, useTheme } from './lib/theme';
 import { t, setLanguage } from './lib/i18n';
 import { BUILD_INFO } from './lib/buildInfo';
 import { ThemeProvider } from './components/ThemeProvider';
@@ -39,9 +39,14 @@ const FinancesScreen = React.lazy(() => import('./screens/FinancesScreen'));
 const TelegramSettingsScreen = React.lazy(() => import('./screens/TelegramSettingsScreen'));
 const NotificationsScreen = React.lazy(() => import('./screens/NotificationsScreen'));
 
+function LazyFallback() {
+  const { colors: c } = useTheme();
+  return <View style={[styles.loader, { backgroundColor: c.background }]}><ActivityIndicator size="large" color={c.primary} /></View>;
+}
+
 function LazyScreen(Component: React.LazyExoticComponent<React.ComponentType<any>>) {
   return (props: any) => (
-    <React.Suspense fallback={<View style={styles.loader}><ActivityIndicator size="large" color={colors.primary} /></View>}>
+    <React.Suspense fallback={<LazyFallback />}>
       <Component {...props} />
     </React.Suspense>
   );
@@ -52,13 +57,15 @@ const Tab = createBottomTabNavigator();
 
 // Tab navigators for each role
 function AdminTabs() {
+const { colors: c } = useTheme();
+const tStyle = { fontSize: fontSize.xs, fontWeight: fontWeight.medium, color: c.textSecondary };
 return (
 <Tab.Navigator
 screenOptions={({ route }) => ({
 headerShown: false,
-tabBarActiveTintColor: colors.primary,
-tabBarInactiveTintColor: colors.textTertiary,
-tabBarStyle: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 4, height: 85 },
+tabBarActiveTintColor: c.primary,
+tabBarInactiveTintColor: c.textTertiary,
+tabBarStyle: { borderTopWidth: 1, borderTopColor: c.border, paddingTop: 4, height: 85 },
 tabBarLabelStyle: { fontSize: fontSize.xs, fontWeight: fontWeight.medium },
 tabBarIcon: ({ color, size }) => {
 let iconName: keyof typeof Ionicons.glyphMap = 'home';
@@ -71,23 +78,25 @@ return <Ionicons name={iconName} size={size} color={color} />;
 },
 })}
 >
-<Tab.Screen name="Dashboard" component={LazyScreen(AdminDashboard)} options={{ title: `${t('dashboard')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('dashboard')}</Text> }} />
-<Tab.Screen name="Schedule" component={LazyScreen(ScheduleScreen)} options={{ title: `${t('schedule')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('schedule')}</Text> }} />
-<Tab.Screen name="Courses" component={LazyScreen(ClassesScreen)} options={{ title: `${t('classes')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('classes')}</Text> }} />
-<Tab.Screen name="UsersTab" component={LazyScreen(UsersScreen)} options={{ title: `${t('users')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('users')}</Text> }} />
-<Tab.Screen name="FinancesTab" component={LazyScreen(FinancesScreen)} options={{ title: `${t('finances')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('finances')}</Text> }} />
+<Tab.Screen name="Dashboard" component={LazyScreen(AdminDashboard)} options={{ title: `${t('dashboard')} — Iqro Learn`, tabBarLabel: () => <Text style={tStyle}>{t('dashboard')}</Text> }} />
+<Tab.Screen name="Schedule" component={LazyScreen(ScheduleScreen)} options={{ title: `${t('schedule')} — Iqro Learn`, tabBarLabel: () => <Text style={tStyle}>{t('schedule')}</Text> }} />
+<Tab.Screen name="Courses" component={LazyScreen(ClassesScreen)} options={{ title: `${t('classes')} — Iqro Learn`, tabBarLabel: () => <Text style={tStyle}>{t('classes')}</Text> }} />
+<Tab.Screen name="UsersTab" component={LazyScreen(UsersScreen)} options={{ title: `${t('users')} — Iqro Learn`, tabBarLabel: () => <Text style={tStyle}>{t('users')}</Text> }} />
+<Tab.Screen name="FinancesTab" component={LazyScreen(FinancesScreen)} options={{ title: `${t('finances')} — Iqro Learn`, tabBarLabel: () => <Text style={tStyle}>{t('finances')}</Text> }} />
 </Tab.Navigator>
 );
 }
 
 function TeacherTabs() {
+const { colors: c } = useTheme();
+const tStyle = { fontSize: fontSize.xs, fontWeight: fontWeight.medium, color: c.textSecondary };
 return (
 <Tab.Navigator
 screenOptions={({ route }) => ({
 headerShown: false,
-tabBarActiveTintColor: colors.primary,
-tabBarInactiveTintColor: colors.textTertiary,
-tabBarStyle: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 4, height: 85 },
+tabBarActiveTintColor: c.primary,
+tabBarInactiveTintColor: c.textTertiary,
+tabBarStyle: { borderTopWidth: 1, borderTopColor: c.border, paddingTop: 4, height: 85 },
 tabBarLabelStyle: { fontSize: fontSize.xs, fontWeight: fontWeight.medium },
 tabBarIcon: ({ color, size }) => {
 let iconName: keyof typeof Ionicons.glyphMap = 'home';
@@ -98,21 +107,23 @@ return <Ionicons name={iconName} size={size} color={color} />;
 },
 })}
 >
-<Tab.Screen name="Dashboard" component={LazyScreen(TeacherDashboard)} options={{ title: `${t('dashboard')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('dashboard')}</Text> }} />
-<Tab.Screen name="Schedule" component={LazyScreen(ScheduleScreen)} options={{ title: `${t('schedule')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('schedule')}</Text> }} />
-<Tab.Screen name="GradesTab" component={LazyScreen(GradesTabScreen)} options={{ title: `${t('grades')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('grades')}</Text> }} />
+<Tab.Screen name="Dashboard" component={LazyScreen(TeacherDashboard)} options={{ title: `${t('dashboard')} — Iqro Learn`, tabBarLabel: () => <Text style={tStyle}>{t('dashboard')}</Text> }} />
+<Tab.Screen name="Schedule" component={LazyScreen(ScheduleScreen)} options={{ title: `${t('schedule')} — Iqro Learn`, tabBarLabel: () => <Text style={tStyle}>{t('schedule')}</Text> }} />
+<Tab.Screen name="GradesTab" component={LazyScreen(GradesTabScreen)} options={{ title: `${t('grades')} — Iqro Learn`, tabBarLabel: () => <Text style={tStyle}>{t('grades')}</Text> }} />
 </Tab.Navigator>
 );
 }
 
 function StudentTabs() {
+const { colors: c } = useTheme();
+const tStyle = { fontSize: fontSize.xs, fontWeight: fontWeight.medium, color: c.textSecondary };
 return (
 <Tab.Navigator
 screenOptions={({ route }) => ({
 headerShown: false,
-tabBarActiveTintColor: colors.primary,
-tabBarInactiveTintColor: colors.textTertiary,
-tabBarStyle: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 4, height: 85 },
+tabBarActiveTintColor: c.primary,
+tabBarInactiveTintColor: c.textTertiary,
+tabBarStyle: { borderTopWidth: 1, borderTopColor: c.border, paddingTop: 4, height: 85 },
 tabBarLabelStyle: { fontSize: fontSize.xs, fontWeight: fontWeight.medium },
 tabBarIcon: ({ color, size }) => {
 let iconName: keyof typeof Ionicons.glyphMap = 'home';
@@ -123,23 +134,24 @@ return <Ionicons name={iconName} size={size} color={color} />;
 },
 })}
 >
-<Tab.Screen name="Dashboard" component={LazyScreen(StudentDashboard)} options={{ title: `${t('dashboard')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('dashboard')}</Text> }} />
-<Tab.Screen name="Schedule" component={LazyScreen(ScheduleScreen)} options={{ title: `${t('schedule')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('schedule')}</Text> }} />
-<Tab.Screen name="GradesTab" component={LazyScreen(GradesTabScreen)} options={{ title: `${t('grades')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('grades')}</Text> }} />
+<Tab.Screen name="Dashboard" component={LazyScreen(StudentDashboard)} options={{ title: `${t('dashboard')} — Iqro Learn`, tabBarLabel: () => <Text style={tStyle}>{t('dashboard')}</Text> }} />
+<Tab.Screen name="Schedule" component={LazyScreen(ScheduleScreen)} options={{ title: `${t('schedule')} — Iqro Learn`, tabBarLabel: () => <Text style={tStyle}>{t('schedule')}</Text> }} />
+<Tab.Screen name="GradesTab" component={LazyScreen(GradesTabScreen)} options={{ title: `${t('grades')} — Iqro Learn`, tabBarLabel: () => <Text style={tStyle}>{t('grades')}</Text> }} />
 </Tab.Navigator>
 );
 }
 
 function UpdateBanner() {
+  const { colors: c } = useTheme();
   const latestBuildId = useQuery(api.appMeta.getLatestBuildId);
   const [dismissed, setDismissed] = useState(false);
 
   if (dismissed || !latestBuildId || latestBuildId === BUILD_INFO.buildId) return null;
 
   return (
-    <View style={styles.updateBanner}>
-      <Ionicons name="arrow-up-circle" size={18} color={colors.textInverse} />
-      <Text style={styles.updateText}>{t('update_available')}</Text>
+    <View style={[styles.updateBanner, { backgroundColor: c.primary }]}>
+      <Ionicons name="arrow-up-circle" size={18} color={c.textInverse} />
+      <Text style={[styles.updateText, { color: c.textInverse }]}>{t('update_available')}</Text>
       <TouchableOpacity
         onPress={() => {
           if (Platform.OS === 'web') {
@@ -149,16 +161,17 @@ function UpdateBanner() {
         }}
         style={styles.updateBtn}
       >
-        <Text style={styles.updateBtnText}>{t('refresh')}</Text>
+        <Text style={[styles.updateBtnText, { color: c.textInverse }]}>{t('refresh')}</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => setDismissed(true)} style={{ padding: 4 }}>
-        <Ionicons name="close" size={16} color={colors.textInverse} />
+        <Ionicons name="close" size={16} color={c.textInverse} />
       </TouchableOpacity>
     </View>
   );
 }
 
 function RoleRouter() {
+const { colors: c } = useTheme();
 const me = useQuery(api.users.me);
 
 // All hooks must be before any conditional returns
@@ -171,8 +184,8 @@ React.useEffect(() => {
 // Loading
 if (me === undefined) {
 return (
-<View style={styles.loader}>
-<ActivityIndicator size="large" color={colors.primary} />
+<View style={[styles.loader, { backgroundColor: c.background }]}>
+<ActivityIndicator size="large" color={c.primary} />
 </View>
 );
 }
@@ -204,10 +217,10 @@ return (
 <Stack.Navigator screenOptions={{
   headerShown: true,
   headerBackTitle: t('back'),
-  headerTintColor: colors.primary,
-  headerStyle: { backgroundColor: colors.background },
+  headerTintColor: c.primary,
+  headerStyle: { backgroundColor: c.background },
   headerShadowVisible: false,
-  headerTitleStyle: { fontSize: fontSize.lg, fontWeight: fontWeight.bold as any, color: colors.text },
+  headerTitleStyle: { fontSize: fontSize.lg, fontWeight: fontWeight.bold as any, color: c.text },
 }}>
 <Stack.Screen name="Main" component={TabComponent} options={{ headerShown: false, title: 'Iqro Learn' }} />
 <Stack.Screen name="ClassDetail" component={LazyScreen(ClassDetailScreen)} options={{ headerShown: false, title: `${t('classes')} — Iqro Learn` }} />
@@ -229,37 +242,42 @@ return (
 );
 }
 
-export default function App() {
-return (
-<ThemeProvider>
-<SafeAreaProvider style={styles.container}>
-<NavigationContainer
-	documentTitle={{
-		formatter: (options, route) =>
-			options?.title ?? route?.name ?? 'Iqro Learn',
-	}}
->
-<AuthLoading>
-<View style={styles.loader}>
-<ActivityIndicator size="large" color={colors.primary} />
-<Text style={styles.loadingText}>{t('loading')}</Text>
-</View>
-</AuthLoading>
+function AppContent() {
+  const { colors: c } = useTheme();
+  return (
+    <SafeAreaProvider style={styles.container}>
+      <NavigationContainer
+        documentTitle={{
+          formatter: (options, route) =>
+            options?.title ?? route?.name ?? 'Iqro Learn',
+        }}
+      >
+        <AuthLoading>
+          <View style={[styles.loader, { backgroundColor: c.background }]}>
+            <ActivityIndicator size="large" color={c.primary} />
+            <Text style={[styles.loadingText, { color: c.textSecondary }]}>{t('loading')}</Text>
+          </View>
+        </AuthLoading>
 
-<Unauthenticated>
-<LoginScreen />
-</Unauthenticated>
+        <Unauthenticated>
+          <LoginScreen />
+        </Unauthenticated>
 
-<Authenticated>
-<RoleRouter />
-</Authenticated>
-</NavigationContainer>
-</SafeAreaProvider>
-</ThemeProvider>
-);
+        <Authenticated>
+          <RoleRouter />
+        </Authenticated>
+      </NavigationContainer>
+    </SafeAreaProvider>
+  );
 }
 
-const tabStyle = { fontSize: fontSize.xs, fontWeight: fontWeight.medium, color: colors.textSecondary };
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}
 
 const styles = {
 container: {
@@ -269,24 +287,20 @@ loader: {
 flex: 1,
 justifyContent: 'center' as const,
 alignItems: 'center' as const,
-backgroundColor: colors.background,
 },
 loadingText: {
 marginTop: 12,
 fontSize: fontSize.md,
-color: colors.textSecondary,
 },
 updateBanner: {
 flexDirection: 'row' as const,
 alignItems: 'center' as const,
-backgroundColor: colors.primary,
 paddingHorizontal: spacing.md,
 paddingVertical: spacing.sm,
 gap: spacing.sm,
 },
 updateText: {
 flex: 1,
-color: colors.textInverse,
 fontSize: fontSize.sm,
 fontWeight: fontWeight.medium,
 },
@@ -297,7 +311,6 @@ paddingVertical: spacing.xs,
 borderRadius: borderRadius.sm,
 },
 updateBtnText: {
-color: colors.textInverse,
 fontSize: fontSize.sm,
 fontWeight: fontWeight.semibold,
 },

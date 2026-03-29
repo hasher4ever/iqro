@@ -4,11 +4,13 @@ import { useNavigation } from '@react-navigation/native';
 import { useQuery } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { colors, fontSize, fontWeight } from '../lib/theme';
+import { colors, fontSize, fontWeight, useTheme } from '../lib/theme';
 
 export function NotificationBell() {
+useTheme(); // subscribe to theme changes
 const navigation = useNavigation<any>();
 const unreadCount = useQuery(api.notifications.getUnreadCount);
+const styles = getStyles();
 
 return (
 <TouchableOpacity
@@ -27,7 +29,8 @@ onPress={() => navigation.navigate('Notifications')}
 );
 }
 
-const styles = StyleSheet.create({
+function getStyles() {
+return StyleSheet.create({
 container: { position: 'relative', padding: 4 },
 badge: {
 position: 'absolute',
@@ -48,3 +51,4 @@ fontWeight: fontWeight.bold,
 lineHeight: 14,
 },
 });
+}
