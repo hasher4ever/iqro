@@ -259,11 +259,10 @@ pendingAmount += tx.amount;
 }
 }
 
-// Get class info
-const cls = await ctx.db.get(args.classId);
-const pricePerClass = cls?.pricePerClass ?? 0;
-const billingType = cls?.billingType ?? "per_lesson";
-const chargeAbsent = cls?.chargeAbsent ?? false;
+// Reuse classDoc already fetched above
+const pricePerClass = classDoc.pricePerClass ?? 0;
+const billingType = classDoc.billingType ?? "per_lesson";
+const chargeAbsent = classDoc.chargeAbsent ?? false;
 
 // Get cancelled dates for this class
 const cancellations = await ctx.db.query("classCancellations")
@@ -301,7 +300,7 @@ let totalOwed: number;
 if (billingType === "per_month") {
   // Per month: count distinct months with chargeable attendance × monthly price
   // If monthlyPrice not set, use 0 (consistent with getFinancials) — pricePerClass is per-lesson, wrong unit
-  const monthlyPrice = cls?.monthlyPrice ?? 0;
+  const monthlyPrice = classDoc.monthlyPrice ?? 0;
   const chargeableAttendance = validAttendance.filter(a =>
     a.status === "present" || a.status === "late" || (chargeAbsent && a.status === "absent")
   );
@@ -414,22 +413,36 @@ relatedTransactionId: Id<"transactions"> | undefined;
 note: string | undefined;
 }> = [];
 
+// Batch-fetch all referenced entities upfront to avoid N+1
+const txClassIds = [...new Set(txs.map((tx) => tx.classId))] as Id<"classes">[];
+const txStudentIds = [...new Set(txs.map((tx) => tx.studentId))] as Id<"users">[];
+const txCreatorIds = [...new Set(txs.map((tx) => tx.createdBy))] as Id<"users">[];
+const entityMap: Record<string, { name?: string }> = {};
+for (const id of txClassIds) {
+const doc = await ctx.db.get(id);
+if (doc) entityMap[id as string] = { name: doc.name };
+}
+// Deduplicate user IDs before fetching
+const txUserIds = [...new Set([...txStudentIds, ...txCreatorIds] as Id<"users">[])];
+for (const id of txUserIds) {
+if (id as string in entityMap) continue;
+const doc = await ctx.db.get(id);
+if (doc) entityMap[id as string] = { name: doc.name };
+}
+
 for (const tx of txs) {
-const cls = await ctx.db.get(tx.classId);
-const student = await ctx.db.get(tx.studentId);
-const creator = await ctx.db.get(tx.createdBy);
 result.push({
 _id: tx._id,
 _creationTime: tx._creationTime,
 classId: tx.classId,
-className: cls?.name,
+className: entityMap[tx.classId as string]?.name,
 studentId: tx.studentId,
-studentName: student?.name,
+studentName: entityMap[tx.studentId as string]?.name,
 amount: tx.amount,
 type: tx.type,
 status: tx.status,
 createdBy: tx.createdBy,
-createdByName: creator?.name,
+createdByName: entityMap[tx.createdBy as string]?.name,
 verifiedBy: tx.verifiedBy,
 verifiedAt: tx.verifiedAt,
 relatedTransactionId: tx.relatedTransactionId,
@@ -502,6 +515,27 @@ totalOwed: number;
 totalPaid: number;
 }> = [];
 
+// Batch-fetch all classes and cancellations upfront to avoid N+1
+const debtorClassIds = [...new Set(eligible.map((e) => e.classId))] as Id<"classes">[];
+const classCache: Record<string, any> = {};
+const cancelledDatesCache: Record<string, Set<string>> = {};
+for (const classId of debtorClassIds) {
+  const cls = await ctx.db.get(classId);
+  if (cls) classCache[classId as string] = cls;
+  const cancellations = await ctx.db.query("classCancellations")
+    .withIndex("by_class", (q: any) => q.eq("classId", classId))
+    .take(500);
+  cancelledDatesCache[classId as string] = new Set(cancellations.map((c: any) => c.date));
+}
+
+// Batch-fetch all student names upfront
+const debtorStudentIds = [...new Set(eligible.map((e) => e.studentId))] as Id<"users">[];
+const studentCache: Record<string, string | undefined> = {};
+for (const sid of debtorStudentIds) {
+  const student = await ctx.db.get(sid);
+  studentCache[sid as string] = student?.name;
+}
+
 for (const enrollment of eligible) {
 // Sum confirmed payments
 const txs = await ctx.db
@@ -516,17 +550,12 @@ for (const tx of txs) {
 if (tx.status === "confirmed") totalPaid += tx.amount;
 }
 
-// Get class info
-const cls = await ctx.db.get(enrollment.classId);
+// Use cached class info
+const cls = classCache[enrollment.classId as string];
 const pricePerClass = cls?.pricePerClass ?? 0;
 const billingType = cls?.billingType ?? "per_lesson";
 const chargeAbsent = cls?.chargeAbsent ?? false;
-
-// Get cancelled dates
-const cancellations = await ctx.db.query("classCancellations")
-  .withIndex("by_class", (q: any) => q.eq("classId", enrollment.classId))
-  .take(500);
-const cancelledDates = new Set(cancellations.map((c: any) => c.date));
+const cancelledDates = cancelledDatesCache[enrollment.classId as string] ?? new Set();
 
 // Count sessions
 const attendanceRecords = await ctx.db
@@ -566,10 +595,9 @@ if (billingType === "per_month") {
 const balance = totalPaid - totalOwed;
 
 if (balance < 0) {
-const student = await ctx.db.get(enrollment.studentId);
 debtors.push({
 studentId: enrollment.studentId,
-studentName: student?.name,
+studentName: studentCache[enrollment.studentId as string],
 classId: enrollment.classId,
 className: cls?.name,
 balance,
@@ -647,27 +675,26 @@ let totalCollected = 0;
 let totalPending = 0;
 let totalStudentsWithDebt = 0;
 
-// Cache class prices to avoid repeated lookups
-const classPriceCache: Record<string, number> = {};
+// Batch-fetch all classes and cancellations upfront to avoid N+1
+const classIdsSet = [...new Set(approved.map((e) => e.classId))] as Id<"classes">[];
+const classConfigCache: Record<string, any> = {};
+const cfCancelledDatesCache: Record<string, Set<string>> = {};
+for (const classId of classIdsSet) {
+  const cls = await ctx.db.get(classId);
+  if (cls) classConfigCache[classId as string] = cls;
+  const cancellations = await ctx.db.query("classCancellations")
+    .withIndex("by_class", (q: any) => q.eq("classId", classId))
+    .take(500);
+  cfCancelledDatesCache[classId as string] = new Set(cancellations.map((c: any) => c.date));
+}
 
 for (const enrollment of approved) {
-  // Get class price (cached)
-  if (!(enrollment.classId in classPriceCache)) {
-    const cls = await ctx.db.get(enrollment.classId);
-    classPriceCache[enrollment.classId] = cls?.pricePerClass ?? 0;
-  }
-  const pricePerClass = classPriceCache[enrollment.classId];
-
-  // Get class config
-  const cls = await ctx.db.get(enrollment.classId);
+  // Use cached class config
+  const cls = classConfigCache[enrollment.classId as string];
+  const pricePerClass = cls?.pricePerClass ?? 0;
   const billingType = cls?.billingType ?? "per_lesson";
   const chargeAbsent = cls?.chargeAbsent ?? false;
-
-  // Get cancelled dates
-  const cancellations = await ctx.db.query("classCancellations")
-    .withIndex("by_class", (q: any) => q.eq("classId", enrollment.classId))
-    .take(500);
-  const cancelledDates = new Set(cancellations.map((c: any) => c.date));
+  const cancelledDates = cfCancelledDatesCache[enrollment.classId as string] ?? new Set();
 
   // Count attended sessions for this student in this class
   const attendanceRecords = await ctx.db

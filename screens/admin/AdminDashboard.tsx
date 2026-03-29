@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { showAlert } from '../../lib/utils';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
@@ -8,7 +9,7 @@ import { t } from '../../lib/i18n';
 import { getTashkentNow, formatMoney } from '../../lib/utils';
 import { Card, SectionTitle, StatusBadge, EmptyState, ScreenLoader } from '../../components/UI';
 import { NotificationBell } from '../../components/NotificationBell';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function AdminDashboard({ navigation }: any) {
 const me = useQuery(api.users.me);
@@ -114,7 +115,7 @@ onPress={() => navigation.navigate('Debtors')}
       style={styles.approveBtn}
       onPress={async () => {
         try { await approveTgReg({ registrationId: r._id }); }
-        catch (err: any) { Alert.alert(t('error'), err?.message || t('error_generic')); }
+        catch (err: any) { showAlert(t('error'), err?.message || t('error_generic')); }
       }}
     >
       <Text style={styles.approveBtnText}>{t('approve')}</Text>
@@ -123,7 +124,7 @@ onPress={() => navigation.navigate('Debtors')}
       style={styles.rejectBtn}
       onPress={async () => {
         try { await rejectTgReg({ registrationId: r._id }); }
-        catch (err: any) { Alert.alert(t('error'), err?.message || t('error_generic')); }
+        catch (err: any) { showAlert(t('error'), err?.message || t('error_generic')); }
       }}
     >
       <Text style={styles.rejectBtnText}>{t('reject')}</Text>
@@ -171,7 +172,7 @@ action={
   style={styles.approveBtn}
   onPress={async () => {
     try { await approveEnrollment({ enrollmentId: e._id }); }
-    catch (err: any) { Alert.alert(t('error'), err?.message || t('error_generic')); }
+    catch (err: any) { showAlert(t('error'), err?.message || t('error_generic')); }
   }}
 >
   <Text style={styles.approveBtnText}>{t('approve')}</Text>
@@ -180,7 +181,7 @@ action={
   style={styles.rejectBtn}
   onPress={async () => {
     try { await rejectEnrollment({ enrollmentId: e._id }); }
-    catch (err: any) { Alert.alert(t('error'), err?.message || t('error_generic')); }
+    catch (err: any) { showAlert(t('error'), err?.message || t('error_generic')); }
   }}
 >
   <Text style={styles.rejectBtnText}>{t('reject')}</Text>

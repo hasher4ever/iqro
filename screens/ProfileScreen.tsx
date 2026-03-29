@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { showAlert } from '../lib/utils';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { useAuthActions } from '@convex-dev/auth/react';
@@ -7,9 +8,10 @@ import { api } from '../convex/_generated/api';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import { t, setLanguage, getLanguage, LANGUAGES, getLanguageLabel, Language } from '../lib/i18n';
 import { Card, Button, Input, ScreenLoader, SectionTitle, ListItem } from '../components/UI';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScreenHeader } from '../components/ScreenHeader';
 import * as Linking from 'expo-linking';
+import { BUILD_INFO } from '../lib/buildInfo';
 
 export default function ProfileScreen({ navigation }: any) {
   const { signOut } = useAuthActions();
@@ -44,13 +46,16 @@ export default function ProfileScreen({ navigation }: any) {
   if (me === undefined) return <ScreenLoader />;
 
   const handleSaveName = async () => {
-    if (name.trim() === (me?.name || '')) return;
+    if (name.trim() === (me?.name || '')) {
+      showAlert(t('success'), t('profile_updated'));
+      return;
+    }
     setSaving(true);
     try {
       await updateProfile({ name: name.trim() });
-      Alert.alert(t('success'), t('profile_updated'));
+      showAlert(t('success'), t('profile_updated'));
     } catch (error: any) {
-      Alert.alert(t('error'), error?.message || t('error_generic'));
+      showAlert(t('error'), error?.message || t('error_generic'));
     } finally {
       setSaving(false);
     }
@@ -58,21 +63,21 @@ export default function ProfileScreen({ navigation }: any) {
 
   const handlePasswordChange = async () => {
     if (newPassword.length < 6) {
-      Alert.alert(t('error'), t('password_min_length'));
+      showAlert(t('error'), t('password_min_length'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert(t('error'), t('passwords_dont_match'));
+      showAlert(t('error'), t('passwords_dont_match'));
       return;
     }
     try {
       await selfResetPassword({ newPassword });
-      Alert.alert(t('success'), t('password_updated'));
+      showAlert(t('success'), t('password_updated'));
       setNewPassword('');
       setConfirmPassword('');
       setShowPasswordChange(false);
     } catch (error: any) {
-      Alert.alert(t('error'), error?.message || t('error_generic'));
+      showAlert(t('error'), error?.message || t('error_generic'));
     }
   };
 
@@ -144,11 +149,11 @@ export default function ProfileScreen({ navigation }: any) {
           <View style={styles.avatarRow}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>
-                {(me?.name || me?.email || '?')[0].toUpperCase()}
+                {(me?.name || me?.email || me?.phone || '?')[0].toUpperCase()}
               </Text>
             </View>
             <View style={styles.infoCol}>
-              <Text style={styles.userEmail}>{me?.email}</Text>
+              <Text style={styles.userEmail}>{me?.email || me?.phone}</Text>
               <Text style={styles.userRole}>
                 {me?.role ? roleLabels[me.role] || me.role : t('role_not_assigned')}
               </Text>
@@ -237,7 +242,7 @@ export default function ProfileScreen({ navigation }: any) {
                       style={styles.regenerateBtn}
                       onPress={async () => {
                         try { await regenerateCode(); }
-                        catch (e: any) { Alert.alert(t('error'), e.message); }
+                        catch (e: any) { showAlert(t('error'), e.message); }
                       }}
                     >
                       <Ionicons name="refresh" size={16} color={colors.primary} />
@@ -323,7 +328,7 @@ export default function ProfileScreen({ navigation }: any) {
                           await unlinkTelegram();
                           setLinkCode(null);
                         } catch (e: any) {
-                          Alert.alert(t('error'), e.message);
+                          showAlert(t('error'), e.message);
                         }
                       }}
                     >
@@ -355,7 +360,7 @@ export default function ProfileScreen({ navigation }: any) {
                           await unlinkTelegram();
                           setLinkCode(null);
                         } catch (e: any) {
-                          Alert.alert(t('error'), e.message);
+                          showAlert(t('error'), e.message);
                         }
                       }}
                     >
@@ -401,7 +406,7 @@ export default function ProfileScreen({ navigation }: any) {
                               setLinkCode(result.code);
                               setLinkBotUsername(result.botUsername || null);
                             } catch (e: any) {
-                              Alert.alert(t('error'), e.message);
+                              showAlert(t('error'), e.message);
                             }
                           }}
                         >
@@ -433,6 +438,8 @@ export default function ProfileScreen({ navigation }: any) {
             </TouchableOpacity>
           ))}
         </Card>
+
+        <Text style={styles.buildVersion}>Build: {BUILD_INFO.buildId} ({BUILD_INFO.buildTime})</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -785,5 +792,12 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: spacing.md,
     textAlign: 'center',
+  },
+  buildVersion: {
+    fontSize: fontSize.xs,
+    color: colors.textTertiary,
+    textAlign: 'center',
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
   },
 });

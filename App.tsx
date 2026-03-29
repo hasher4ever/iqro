@@ -7,33 +7,43 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Authenticated, Unauthenticated, AuthLoading } from 'convex/react';
 import { useQuery } from 'convex/react'; // Edited: added useQuery import
 import { api } from './convex/_generated/api';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors, fontSize, fontWeight } from './lib/theme';
 import { t, setLanguage } from './lib/i18n';
 
-// Screens
+// Eagerly loaded screens (needed immediately)
 import LoginScreen from './screens/LoginScreen';
-import AdminDashboard from './screens/admin/AdminDashboard';
-import TeacherDashboard from './screens/teacher/TeacherDashboard';
-import StudentDashboard from './screens/student/StudentDashboard';
 import NoRoleScreen from './screens/NoRoleScreen';
-import ClassesScreen from './screens/ClassesScreen';
-import ClassDetailScreen from './screens/ClassDetailScreen';
-import ScheduleScreen from './screens/ScheduleScreen';
-import ProfileScreen from './screens/ProfileScreen';
-import AttendanceScreen from './screens/AttendanceScreen';
-import GradesScreen from './screens/GradesScreen';
-import PaymentScreen from './screens/PaymentScreen';
-import TransactionsScreen from './screens/TransactionsScreen';
-import UsersScreen from './screens/UsersScreen';
-import AuditLogsScreen from './screens/AuditLogsScreen';
-import RoomsScreen from './screens/RoomsScreen';
-import DebtorsScreen from './screens/DebtorsScreen';
-import GradesTabScreen from './screens/GradesTabScreen';
 import CompanyOnboardingScreen from './screens/CompanyOnboardingScreen';
-import FinancesScreen from './screens/FinancesScreen';
-import TelegramSettingsScreen from './screens/TelegramSettingsScreen';
-import NotificationsScreen from './screens/NotificationsScreen';
+
+// Lazy loaded screens
+const AdminDashboard = React.lazy(() => import('./screens/admin/AdminDashboard'));
+const TeacherDashboard = React.lazy(() => import('./screens/teacher/TeacherDashboard'));
+const StudentDashboard = React.lazy(() => import('./screens/student/StudentDashboard'));
+const ClassesScreen = React.lazy(() => import('./screens/ClassesScreen'));
+const ClassDetailScreen = React.lazy(() => import('./screens/ClassDetailScreen'));
+const ScheduleScreen = React.lazy(() => import('./screens/ScheduleScreen'));
+const ProfileScreen = React.lazy(() => import('./screens/ProfileScreen'));
+const AttendanceScreen = React.lazy(() => import('./screens/AttendanceScreen'));
+const GradesScreen = React.lazy(() => import('./screens/GradesScreen'));
+const PaymentScreen = React.lazy(() => import('./screens/PaymentScreen'));
+const TransactionsScreen = React.lazy(() => import('./screens/TransactionsScreen'));
+const UsersScreen = React.lazy(() => import('./screens/UsersScreen'));
+const AuditLogsScreen = React.lazy(() => import('./screens/AuditLogsScreen'));
+const RoomsScreen = React.lazy(() => import('./screens/RoomsScreen'));
+const DebtorsScreen = React.lazy(() => import('./screens/DebtorsScreen'));
+const GradesTabScreen = React.lazy(() => import('./screens/GradesTabScreen'));
+const FinancesScreen = React.lazy(() => import('./screens/FinancesScreen'));
+const TelegramSettingsScreen = React.lazy(() => import('./screens/TelegramSettingsScreen'));
+const NotificationsScreen = React.lazy(() => import('./screens/NotificationsScreen'));
+
+function LazyScreen(Component: React.LazyExoticComponent<React.ComponentType<any>>) {
+  return (props: any) => (
+    <React.Suspense fallback={<View style={styles.loader}><ActivityIndicator size="large" color={colors.primary} /></View>}>
+      <Component {...props} />
+    </React.Suspense>
+  );
+}
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -59,11 +69,11 @@ return <Ionicons name={iconName} size={size} color={color} />;
 },
 })}
 >
-<Tab.Screen name="Dashboard" component={AdminDashboard} options={{ title: `${t('dashboard')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('dashboard')}</Text> }} />
-<Tab.Screen name="Schedule" component={ScheduleScreen} options={{ title: `${t('schedule')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('schedule')}</Text> }} />
-<Tab.Screen name="Courses" component={ClassesScreen} options={{ title: `${t('classes')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('classes')}</Text> }} />
-<Tab.Screen name="UsersTab" component={UsersScreen} options={{ title: `${t('users')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('users')}</Text> }} />
-<Tab.Screen name="FinancesTab" component={FinancesScreen} options={{ title: `${t('finances')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('finances')}</Text> }} />
+<Tab.Screen name="Dashboard" component={LazyScreen(AdminDashboard)} options={{ title: `${t('dashboard')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('dashboard')}</Text> }} />
+<Tab.Screen name="Schedule" component={LazyScreen(ScheduleScreen)} options={{ title: `${t('schedule')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('schedule')}</Text> }} />
+<Tab.Screen name="Courses" component={LazyScreen(ClassesScreen)} options={{ title: `${t('classes')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('classes')}</Text> }} />
+<Tab.Screen name="UsersTab" component={LazyScreen(UsersScreen)} options={{ title: `${t('users')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('users')}</Text> }} />
+<Tab.Screen name="FinancesTab" component={LazyScreen(FinancesScreen)} options={{ title: `${t('finances')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('finances')}</Text> }} />
 </Tab.Navigator>
 );
 }
@@ -86,9 +96,9 @@ return <Ionicons name={iconName} size={size} color={color} />;
 },
 })}
 >
-<Tab.Screen name="Dashboard" component={TeacherDashboard} options={{ title: `${t('dashboard')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('dashboard')}</Text> }} />
-<Tab.Screen name="Schedule" component={ScheduleScreen} options={{ title: `${t('schedule')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('schedule')}</Text> }} />
-<Tab.Screen name="GradesTab" component={GradesTabScreen} options={{ title: `${t('grades')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('grades')}</Text> }} />
+<Tab.Screen name="Dashboard" component={LazyScreen(TeacherDashboard)} options={{ title: `${t('dashboard')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('dashboard')}</Text> }} />
+<Tab.Screen name="Schedule" component={LazyScreen(ScheduleScreen)} options={{ title: `${t('schedule')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('schedule')}</Text> }} />
+<Tab.Screen name="GradesTab" component={LazyScreen(GradesTabScreen)} options={{ title: `${t('grades')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('grades')}</Text> }} />
 </Tab.Navigator>
 );
 }
@@ -111,9 +121,9 @@ return <Ionicons name={iconName} size={size} color={color} />;
 },
 })}
 >
-<Tab.Screen name="Dashboard" component={StudentDashboard} options={{ title: `${t('dashboard')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('dashboard')}</Text> }} />
-<Tab.Screen name="Schedule" component={ScheduleScreen} options={{ title: `${t('schedule')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('schedule')}</Text> }} />
-<Tab.Screen name="GradesTab" component={GradesTabScreen} options={{ title: `${t('grades')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('grades')}</Text> }} />
+<Tab.Screen name="Dashboard" component={LazyScreen(StudentDashboard)} options={{ title: `${t('dashboard')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('dashboard')}</Text> }} />
+<Tab.Screen name="Schedule" component={LazyScreen(ScheduleScreen)} options={{ title: `${t('schedule')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('schedule')}</Text> }} />
+<Tab.Screen name="GradesTab" component={LazyScreen(GradesTabScreen)} options={{ title: `${t('grades')} — Iqro Learn`, tabBarLabel: () => <Text style={tabStyle}>{t('grades')}</Text> }} />
 </Tab.Navigator>
 );
 }
@@ -168,20 +178,20 @@ return (
   headerTitleStyle: { fontSize: fontSize.lg, fontWeight: fontWeight.bold as any, color: colors.text },
 }}>
 <Stack.Screen name="Main" component={TabComponent} options={{ headerShown: false, title: 'Iqro Learn' }} />
-<Stack.Screen name="ClassDetail" component={ClassDetailScreen} options={{ headerShown: false, title: `${t('classes')} — Iqro Learn` }} />
-<Stack.Screen name="AttendanceScreen" component={AttendanceScreen} options={{ headerShown: false, title: `${t('attendance')} — Iqro Learn` }} />
-<Stack.Screen name="GradesScreen" component={GradesScreen} options={{ headerShown: false, title: `${t('grades')} — Iqro Learn` }} />
-<Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false, title: `${t('payment')} — Iqro Learn` }} />
-<Stack.Screen name="Transactions" component={TransactionsScreen} options={{ headerShown: false, title: `${t('transactions')} — Iqro Learn` }} />
-<Stack.Screen name="Users" component={UsersScreen} options={{ headerShown: false, title: `${t('users')} — Iqro Learn` }} />
-<Stack.Screen name="AuditLogs" component={AuditLogsScreen} options={{ headerShown: false, title: `${t('audit_logs')} — Iqro Learn` }} />
-<Stack.Screen name="Rooms" component={RoomsScreen} options={{ headerShown: false, title: `${t('manage_rooms')} — Iqro Learn` }} />
-<Stack.Screen name="Debtors" component={DebtorsScreen} options={{ headerShown: false, title: `${t('debtors')} — Iqro Learn` }} />
-<Stack.Screen name="Finances" component={FinancesScreen} options={{ headerShown: false, title: `${t('finances')} — Iqro Learn` }} />
-<Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false, title: `${t('profile')} — Iqro Learn` }} />
-<Stack.Screen name="Classes" component={ClassesScreen} options={{ headerShown: false, title: `${t('classes')} — Iqro Learn` }} />
-<Stack.Screen name="TelegramSettings" component={TelegramSettingsScreen} options={{ headerShown: false, title: `${t('telegram')} — Iqro Learn` }} />
-<Stack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: false, title: `${t('notifications')} — Iqro Learn` }} />
+<Stack.Screen name="ClassDetail" component={LazyScreen(ClassDetailScreen)} options={{ headerShown: false, title: `${t('classes')} — Iqro Learn` }} />
+<Stack.Screen name="AttendanceScreen" component={LazyScreen(AttendanceScreen)} options={{ headerShown: false, title: `${t('attendance')} — Iqro Learn` }} />
+<Stack.Screen name="GradesScreen" component={LazyScreen(GradesScreen)} options={{ headerShown: false, title: `${t('grades')} — Iqro Learn` }} />
+<Stack.Screen name="PaymentScreen" component={LazyScreen(PaymentScreen)} options={{ headerShown: false, title: `${t('payment')} — Iqro Learn` }} />
+<Stack.Screen name="Transactions" component={LazyScreen(TransactionsScreen)} options={{ headerShown: false, title: `${t('transactions')} — Iqro Learn` }} />
+<Stack.Screen name="Users" component={LazyScreen(UsersScreen)} options={{ headerShown: false, title: `${t('users')} — Iqro Learn` }} />
+<Stack.Screen name="AuditLogs" component={LazyScreen(AuditLogsScreen)} options={{ headerShown: false, title: `${t('audit_logs')} — Iqro Learn` }} />
+<Stack.Screen name="Rooms" component={LazyScreen(RoomsScreen)} options={{ headerShown: false, title: `${t('manage_rooms')} — Iqro Learn` }} />
+<Stack.Screen name="Debtors" component={LazyScreen(DebtorsScreen)} options={{ headerShown: false, title: `${t('debtors')} — Iqro Learn` }} />
+<Stack.Screen name="Finances" component={LazyScreen(FinancesScreen)} options={{ headerShown: false, title: `${t('finances')} — Iqro Learn` }} />
+<Stack.Screen name="Profile" component={LazyScreen(ProfileScreen)} options={{ headerShown: false, title: `${t('profile')} — Iqro Learn` }} />
+<Stack.Screen name="Classes" component={LazyScreen(ClassesScreen)} options={{ headerShown: false, title: `${t('classes')} — Iqro Learn` }} />
+<Stack.Screen name="TelegramSettings" component={LazyScreen(TelegramSettingsScreen)} options={{ headerShown: false, title: `${t('telegram')} — Iqro Learn` }} />
+<Stack.Screen name="Notifications" component={LazyScreen(NotificationsScreen)} options={{ headerShown: false, title: `${t('notifications')} — Iqro Learn` }} />
 </Stack.Navigator>
 );
 }

@@ -61,6 +61,7 @@ isArchived: v.optional(v.boolean()),
 companyId: v.optional(v.id("companies")),
 })
 .index("email", ["email"])
+.index("by_phone", ["phone"])
 .index("by_role", ["role"])
 .index("by_company", ["companyId"])
 .index("by_company_and_role", ["companyId", "role"]),
@@ -215,7 +216,8 @@ companyId: v.id("companies"),
 .index("by_user", ["userId"])
 .index("by_entityType", ["entityType"])
 .index("by_action", ["action"])
-.index("by_company", ["companyId"]),
+.index("by_company", ["companyId"])
+.index("by_company_and_entityType", ["companyId", "entityType"]),
 
 leaderboardPeriods: defineTable({
 classId: v.id("classes"),
@@ -259,6 +261,7 @@ createdBy: v.id("users"),
 companyId: v.id("companies"),
 })
 .index("by_teacher", ["teacherId"])
+.index("by_teacher_and_period", ["teacherId", "period"])
 .index("by_company", ["companyId"]),
 
 telegramLinkCodes: defineTable({

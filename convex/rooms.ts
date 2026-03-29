@@ -136,18 +136,28 @@ startTime: string;
 endTime: string;
 }> = [];
 
-for (const slot of slots) {
-const cls = await ctx.db.get(slot.classId);
-let teacherName: string | undefined;
+// Batch-fetch all classes and teachers upfront
+const slotClassIds = [...new Set(slots.map((s: any) => s.classId))] as Id<"classes">[];
+const classMap: Record<string, any> = {};
+const teacherNameMap: Record<string, string | undefined> = {};
+for (const cid of slotClassIds) {
+const cls = await ctx.db.get(cid);
 if (cls) {
+classMap[cid as string] = cls;
+if (!((cls.teacherId as string) in teacherNameMap)) {
 const teacher = await ctx.db.get(cls.teacherId);
-teacherName = teacher?.name;
+teacherNameMap[cls.teacherId as string] = teacher?.name;
 }
+}
+}
+
+for (const slot of slots) {
+const cls = classMap[slot.classId as string];
 result.push({
 _id: slot._id,
 classId: slot.classId,
 className: cls?.name,
-teacherName,
+teacherName: cls ? teacherNameMap[cls.teacherId as string] : undefined,
 dayOfWeek: slot.dayOfWeek,
 startTime: slot.startTime,
 endTime: slot.endTime,
@@ -194,25 +204,41 @@ startTime: string;
 endTime: string;
 }> = [];
 
-for (const slot of slots) {
-const room = await ctx.db.get(slot.roomId);
-const cls = await ctx.db.get(slot.classId);
-if (!cls || !cls.isActive) continue;
-let teacherName: string | undefined;
-let subjectName: string | undefined;
-if (cls) {
-const teacher = await ctx.db.get(cls.teacherId);
-teacherName = teacher?.name;
-subjectName = cls.subjectName;
+// Batch-fetch all rooms, classes, and teachers upfront
+const fullClassIds = [...new Set(slots.map((s: any) => s.classId))] as Id<"classes">[];
+const fullRoomIds = [...new Set(slots.map((s: any) => s.roomId))] as Id<"rooms">[];
+const fullClassMap: Record<string, any> = {};
+const fullRoomMap: Record<string, any> = {};
+const fullTeacherNameMap: Record<string, string | undefined> = {};
+
+for (const cid of fullClassIds) {
+const cls = await ctx.db.get(cid);
+if (cls) fullClassMap[cid as string] = cls;
 }
+for (const rid of fullRoomIds) {
+const room = await ctx.db.get(rid);
+if (room) fullRoomMap[rid as string] = room;
+}
+const teacherIdsToFetch = [...new Set(
+  Object.values(fullClassMap).map((c: any) => c.teacherId)
+)] as Id<"users">[];
+for (const tid of teacherIdsToFetch) {
+const teacher = await ctx.db.get(tid);
+fullTeacherNameMap[tid as string] = teacher?.name;
+}
+
+for (const slot of slots) {
+const cls = fullClassMap[slot.classId as string];
+if (!cls || !cls.isActive) continue;
+const room = fullRoomMap[slot.roomId as string];
 result.push({
 _id: slot._id,
 roomId: slot.roomId,
 roomName: room?.name,
 classId: slot.classId,
 className: cls?.name,
-subjectName,
-teacherName,
+subjectName: cls.subjectName,
+teacherName: fullTeacherNameMap[cls.teacherId as string],
 dayOfWeek: slot.dayOfWeek,
 startTime: slot.startTime,
 endTime: slot.endTime,
@@ -258,17 +284,26 @@ startTime: string;
 endTime: string;
 }> = [];
 
-for (const slot of slots) {
-if (args.excludeClassId && slot.classId === args.excludeClassId) continue;
-if (slot.startTime < args.endTime && slot.endTime > args.startTime) {
-const cls = await ctx.db.get(slot.classId);
+// Filter conflicting slots first, then batch-fetch class names
+const conflictingSlots = slots.filter((slot: any) => {
+if (args.excludeClassId && slot.classId === args.excludeClassId) return false;
+return slot.startTime < args.endTime && slot.endTime > args.startTime;
+});
+
+const conflictClassIds = [...new Set(conflictingSlots.map((s: any) => s.classId))] as Id<"classes">[];
+const conflictClassNameMap: Record<string, string | undefined> = {};
+for (const cid of conflictClassIds) {
+const cls = await ctx.db.get(cid);
+conflictClassNameMap[cid as string] = cls?.name;
+}
+
+for (const slot of conflictingSlots) {
 conflicts.push({
 classId: slot.classId,
-className: cls?.name,
+className: conflictClassNameMap[slot.classId as string],
 startTime: slot.startTime,
 endTime: slot.endTime,
 });
-}
 }
 
 return conflicts;

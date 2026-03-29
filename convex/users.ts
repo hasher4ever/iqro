@@ -39,6 +39,7 @@ v.object({
 _id: v.id("users"),
 name: v.optional(v.string()),
 email: v.optional(v.string()),
+phone: v.optional(v.string()),
 role: v.optional(roleValidator),
 language: v.optional(languageValidator),
 isActive: v.optional(v.boolean()),
@@ -56,6 +57,7 @@ return {
 _id: user._id,
 name: user.name,
 email: user.email,
+phone: user.phone,
 role: user.role,
 language: user.language,
 isActive: user.isActive,
@@ -108,6 +110,7 @@ _id: v.id("users"),
 _creationTime: v.number(),
 name: v.optional(v.string()),
 email: v.optional(v.string()),
+phone: v.optional(v.string()),
 role: v.optional(roleValidator),
 isActive: v.optional(v.boolean()),
 isArchived: v.optional(v.boolean()),
@@ -162,7 +165,8 @@ const searchLower = args.search.toLowerCase();
 filtered = filtered.filter((u) => {
 const name = (u.name || "").toLowerCase();
 const email = (u.email || "").toLowerCase();
-return name.includes(searchLower) || email.includes(searchLower);
+const phone = (u.phone || "").toLowerCase();
+return name.includes(searchLower) || email.includes(searchLower) || phone.includes(searchLower);
 });
 }
 
@@ -181,6 +185,7 @@ _id: u._id,
 _creationTime: u._creationTime,
 name: u.name,
 email: u.email,
+phone: u.phone,
 role: u.role,
 isActive: u.isActive,
 isArchived: u.isArchived,
@@ -399,6 +404,7 @@ returns: v.array(v.object({
 _id: v.id("users"),
 name: v.optional(v.string()),
 email: v.optional(v.string()),
+phone: v.optional(v.string()),
 })),
 handler: async (ctx) => {
 const userId = await auth.getUserId(ctx);
@@ -412,7 +418,7 @@ q.eq("companyId", user.companyId).eq("role", "teacher")
 )
 .take(100);
 
-return teachers.map((t) => ({ _id: t._id, name: t.name, email: t.email }));
+return teachers.map((t) => ({ _id: t._id, name: t.name, email: t.email, phone: t.phone }));
 },
 });
 
@@ -423,6 +429,7 @@ returns: v.array(v.object({
 _id: v.id("users"),
 name: v.optional(v.string()),
 email: v.optional(v.string()),
+phone: v.optional(v.string()),
 })),
 handler: async (ctx) => {
 const userId = await auth.getUserId(ctx);
@@ -436,6 +443,6 @@ q.eq("companyId", user.companyId).eq("role", "student_parent")
 )
 .take(500);
 
-return students.map((s) => ({ _id: s._id, name: s.name, email: s.email }));
+return students.map((s) => ({ _id: s._id, name: s.name, email: s.email, phone: s.phone }));
 },
 });

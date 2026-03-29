@@ -2,7 +2,7 @@ import { v, ConvexError } from "convex/values";
 import { internalMutation, internalQuery, action } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
-import { auth } from "./auth";
+import { auth, isPhone } from "./auth";
 
 const ROLE_LEVEL: Record<string, number> = {
 super_admin: 4,
@@ -121,7 +121,7 @@ export const insertAuditLog = internalMutation({
       action: args.action,
       entityType: args.entityType,
       entityId: args.entityId,
-      details: JSON.stringify({ email: user?.email }),
+      details: JSON.stringify({ email: user?.email, phone: user?.phone }),
       timestamp: Date.now(),
       companyId: user.companyId,
     });
@@ -156,6 +156,7 @@ export const updateAccountSecret = internalMutation({
 export const createUserWithAccount = internalMutation({
   args: {
     email: v.string(),
+    phone: v.optional(v.string()),
     name: v.string(),
     hashedPassword: v.string(),
     role: v.string(),
@@ -164,26 +165,38 @@ export const createUserWithAccount = internalMutation({
   },
   returns: v.id("users"),
   handler: async (ctx, args) => {
-    // Check if email already exists
+    // Check if identifier already exists (email index stores both email and phone identifiers)
     const existing = await ctx.db
       .query("users")
       .withIndex("email", (q: any) => q.eq("email", args.email))
       .first();
     if (existing) {
-      throw new Error("A user with this email already exists");
+      throw new Error("A user with this identifier already exists");
+    }
+
+    // If phone provided, also check phone uniqueness
+    if (args.phone) {
+      const existingPhone = await ctx.db
+        .query("users")
+        .withIndex("by_phone", (q: any) => q.eq("phone", args.phone))
+        .first();
+      if (existingPhone) {
+        throw new Error("A user with this phone number already exists");
+      }
     }
 
     // Create the user
     const userId = await ctx.db.insert("users", {
       name: args.name,
       email: args.email,
+      phone: args.phone || undefined,
       role: args.role as any,
       isActive: true,
       isArchived: false,
       companyId: args.companyId,
     });
 
-    // Create the auth account
+    // Create the auth account (providerAccountId is the login identifier)
     await ctx.db.insert("authAccounts", {
       userId,
       provider: "password",
@@ -197,7 +210,7 @@ export const createUserWithAccount = internalMutation({
       action: "admin_create_user",
       entityType: "user",
       entityId: userId,
-      details: JSON.stringify({ email: args.email, role: args.role, name: args.name }),
+      details: JSON.stringify({ email: args.email, phone: args.phone, role: args.role, name: args.name }),
       timestamp: Date.now(),
       companyId: args.companyId,
     });
@@ -206,10 +219,11 @@ export const createUserWithAccount = internalMutation({
   },
 });
 
-// Public action: admin creates a new user with email/password
+// Public action: admin creates a new user with email or phone + password
 export const adminCreateUser = action({
   args: {
-    email: v.string(),
+    email: v.optional(v.string()),
+    phone: v.optional(v.string()),
     name: v.string(),
     password: v.string(),
     role: v.optional(v.string()),
@@ -235,12 +249,28 @@ export const adminCreateUser = action({
       throw new Error("Password must be at least 6 characters");
     }
 
-    if (!args.email || !args.email.includes("@")) {
+    // Require at least one identifier
+    const email = args.email?.trim().toLowerCase();
+    const phone = args.phone?.trim();
+
+    if (!email && !phone) {
+      throw new Error("Either email or phone is required");
+    }
+
+    if (email && !email.includes("@")) {
       throw new Error("Invalid email");
     }
 
+    if (phone && !isPhone(phone)) {
+      throw new Error("Invalid phone number");
+    }
+
+    // The auth identifier: email takes priority, fallback to phone
+    const identifier = email || phone!;
+
     const newUserId: Id<"users"> = await ctx.runAction(internal.adminAuth.hashAndCreateUser, {
-      email: args.email.toLowerCase().trim(),
+      email: identifier,
+      phone: phone || undefined,
       name: args.name.trim(),
       password: args.password,
       role: targetRole,

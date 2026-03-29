@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { showAlert } from '../lib/utils';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import { t } from '../lib/i18n';
 import { Card, SectionTitle, EmptyState, Badge, ScreenLoader } from '../components/UI';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScreenHeader } from '../components/ScreenHeader';
 
 export default function TelegramSettingsScreen({ navigation }: any) {
@@ -43,41 +44,46 @@ return (
 
 const handleSetup = async () => {
 if (!botToken.trim()) {
-Alert.alert(t('error'), t('telegram_bot_token_placeholder'));
+showAlert(t('error'), t('telegram_bot_token_placeholder'));
 return;
 }
 
 setSettingUp(true);
 try {
-const result = await setupBot({ botToken: botToken.trim(), siteUrl: 'https://grateful-fly-863.convex.site' });
+const siteUrl = process.env.EXPO_PUBLIC_CONVEX_SITE_URL || '';
+const result = await setupBot({ botToken: botToken.trim(), siteUrl });
 if (result.success) {
-Alert.alert(t('success'), t('telegram_setup_success'));
+showAlert(t('success'), t('telegram_setup_success'));
 setBotToken('');
 } else {
-Alert.alert(t('error'), result.error || t('telegram_setup_error'));
+showAlert(t('error'), result.error || t('telegram_setup_error'));
 }
 } catch (error: any) {
-Alert.alert(t('error'), error?.message || t('telegram_setup_error'));
+showAlert(t('error'), error?.message || t('telegram_setup_error'));
 } finally {
 setSettingUp(false);
 }
 };
 
-const handleDisable = async () => {
-Alert.alert(t('telegram_disable'), t('confirm') + '?', [
-{ text: t('cancel'), style: 'cancel' },
-{
-text: t('confirm'),
-style: 'destructive',
-onPress: async () => {
-try {
-await disableTelegram();
-} catch (error: any) {
-Alert.alert(t('error'), error?.message || t('error_generic'));
-}
-},
-},
-]);
+const handleDisable = () => {
+showAlert(
+  t('telegram_disable'),
+  t('telegram_disable') + '?',
+  [
+    { text: t('cancel'), style: 'cancel' },
+    {
+      text: t('confirm'),
+      style: 'destructive',
+      onPress: async () => {
+        try {
+          await disableTelegram();
+        } catch (error: any) {
+          showAlert(t('error'), error?.message || t('error_generic'));
+        }
+      },
+    },
+  ]
+);
 };
 
 const statusColor = config.telegramEnabled ? colors.success : colors.textTertiary;
@@ -148,6 +154,44 @@ disabled={settingUp}
 <Ionicons name="close-circle-outline" size={18} color={colors.error} />
 <Text style={styles.disableBtnText}>{t('telegram_disable')}</Text>
 </TouchableOpacity>
+)}
+
+{/* How It Works */}
+{config.telegramEnabled && (
+<>
+<SectionTitle title={t('telegram_how_it_works')} />
+<Card>
+<View style={styles.flowSection}>
+<View style={styles.flowHeader}>
+<Ionicons name="link-outline" size={18} color={colors.primary} />
+<Text style={styles.flowTitle}>{t('telegram_flow_link_title')}</Text>
+</View>
+<Text style={styles.flowDesc}>{t('telegram_flow_link_desc')}</Text>
+</View>
+<View style={styles.flowDivider} />
+<View style={styles.flowSection}>
+<View style={styles.flowHeader}>
+<Ionicons name="person-add-outline" size={18} color={colors.success} />
+<Text style={styles.flowTitle}>{t('telegram_flow_register_title')}</Text>
+</View>
+<Text style={styles.flowDesc}>{t('telegram_flow_register_desc')}</Text>
+</View>
+<View style={styles.flowDivider} />
+<View style={styles.warningBox}>
+<Ionicons name="warning-outline" size={16} color={colors.warning} />
+<Text style={styles.warningText}>{t('telegram_important_note')}</Text>
+</View>
+</Card>
+
+<SectionTitle title={t('telegram_student_instructions')} />
+<Card>
+<Text style={styles.flowDesc}>{t('telegram_student_step1')}</Text>
+<Text style={styles.flowDesc}>{t('telegram_student_step2')}</Text>
+<Text style={styles.flowDesc}>{t('telegram_student_step3')}</Text>
+<Text style={styles.flowDesc}>{t('telegram_student_step4')}</Text>
+<Text style={styles.flowDesc}>{t('telegram_student_step5')}</Text>
+</Card>
+</>
 )}
 
 {/* Notification Logs */}
@@ -233,6 +277,13 @@ logUser: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: colors.t
 logEvent: { fontSize: fontSize.xs, color: colors.textSecondary, marginTop: 2 },
 logError: { fontSize: fontSize.xs, color: colors.error, marginTop: 2 },
 logTime: { fontSize: fontSize.xs, color: colors.textTertiary, marginTop: 4 },
+flowSection: { paddingVertical: spacing.xs },
+flowHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs },
+flowTitle: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: colors.text, flex: 1 },
+flowDesc: { fontSize: fontSize.sm, color: colors.textSecondary, lineHeight: 20, marginBottom: spacing.xs },
+flowDivider: { height: 1, backgroundColor: colors.borderLight, marginVertical: spacing.sm },
+warningBox: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, backgroundColor: colors.warningLight, borderRadius: borderRadius.sm, padding: spacing.sm },
+warningText: { fontSize: fontSize.sm, color: colors.warning, flex: 1, lineHeight: 20 },
 });
 
 // ... existing code ...

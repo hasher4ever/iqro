@@ -1,12 +1,13 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Switch, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Switch, KeyboardAvoidingView, Platform } from 'react-native';
+import { showAlert } from '../lib/utils';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import { t } from '../lib/i18n';
 import { Button, ScreenLoader, EmptyState, SectionTitle } from '../components/UI';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScreenHeader } from '../components/ScreenHeader';
 import * as Clipboard from 'expo-clipboard';
 
@@ -80,7 +81,7 @@ const [saving, setSaving] = useState(false);
 
 // Create modal state
 const [showCreateModal, setShowCreateModal] = useState(false);
-const [createForm, setCreateForm] = useState({ name: '', email: '', password: '', role: 'student_parent' });
+const [createForm, setCreateForm] = useState({ name: '', email: '', phone: '', password: '', role: 'student_parent' });
 const [creating, setCreating] = useState(false);
 
 if (users === undefined || me === undefined) return <ScreenLoader />;
@@ -138,7 +139,7 @@ await archiveUser({ targetUserId: editUser._id });
 // Reset password if provided
 if (editPassword.length > 0) {
 if (editPassword.length < 6) {
-Alert.alert(t('error'), t('password_min_length'));
+showAlert(t('error'), t('password_min_length'));
 setSaving(false);
 return;
 }
@@ -146,7 +147,7 @@ await adminResetPassword({ targetUserId: editUser._id, newPassword: editPassword
 }
 setEditUser(null);
 } catch (error: any) {
-Alert.alert(t('error'), error?.message || t('error_generic'));
+showAlert(t('error'), error?.message || t('error_generic'));
 }
 setSaving(false);
 };
@@ -154,39 +155,49 @@ setSaving(false);
 const handleApprove = async (id: string) => {
 setSaving(true);
 try { await approveEnrollment({ enrollmentId: id as any }); }
-catch (error: any) { Alert.alert(t('error'), error?.message || t('error_generic')); }
+catch (error: any) { showAlert(t('error'), error?.message || t('error_generic')); }
 finally { setSaving(false); }
 };
 
 const handleReject = async (id: string) => {
 setSaving(true);
 try { await rejectEnrollment({ enrollmentId: id as any }); }
-catch (error: any) { Alert.alert(t('error'), error?.message || t('error_generic')); }
+catch (error: any) { showAlert(t('error'), error?.message || t('error_generic')); }
 finally { setSaving(false); }
 };
 
 const handleCopyEmail = (email: string) => {
 try { Clipboard.setStringAsync(email); } catch {}
-Alert.alert(email, '', [{ text: 'OK' }]);
+showAlert(email, '', [{ text: 'OK' }]);
 };
 
 const handleCreateUser = async () => {
-if (!createForm.name || !createForm.email || !createForm.password) {
-Alert.alert(t('error'), t('fill_required_fields'));
+if (!createForm.name || !createForm.password) {
+showAlert(t('error'), t('fill_required_fields'));
+return;
+}
+if (!createForm.email && !createForm.phone) {
+showAlert(t('error'), t('email_or_phone_required'));
 return;
 }
 if (createForm.password.length < 6) {
-Alert.alert(t('error'), t('password_min_length'));
+showAlert(t('error'), t('password_min_length'));
 return;
 }
 try {
 setCreating(true);
-await adminCreateUser({ name: createForm.name, email: createForm.email, password: createForm.password, role: createForm.role });
-Alert.alert(t('success'), t('user_created'));
+await adminCreateUser({
+  name: createForm.name,
+  email: createForm.email || undefined,
+  phone: createForm.phone || undefined,
+  password: createForm.password,
+  role: createForm.role,
+});
+showAlert(t('success'), t('user_created'));
 setShowCreateModal(false);
-setCreateForm({ name: '', email: '', password: '', role: 'student_parent' });
+setCreateForm({ name: '', email: '', phone: '', password: '', role: 'student_parent' });
 } catch (error: any) {
-Alert.alert(t('error'), error?.message || t('error_generic'));
+showAlert(t('error'), error?.message || t('error_generic'));
 }
 setCreating(false);
 };
@@ -329,7 +340,7 @@ onPress={() => { if (canEdit) openEditModal(user); }}
 {/* Name + Email */}
 <View style={styles.nameCol}>
 <Text style={styles.userName} numberOfLines={1}>{user.name || 'No name'}</Text>
-<Text style={styles.userEmail} numberOfLines={1}>{user.email || ''}</Text>
+<Text style={styles.userEmail} numberOfLines={1}>{user.email || user.phone || ''}</Text>
 </View>
 
 {/* Status dot */}
@@ -375,13 +386,16 @@ placeholderTextColor={colors.textTertiary}
 autoCapitalize="words"
 />
 
-{/* Email (read-only) */}
-<Text style={styles.fieldLabel}>{t('email')}</Text>
+{/* Email/Phone (read-only) */}
+<Text style={styles.fieldLabel}>{t('email_or_phone')}</Text>
 <TouchableOpacity
 style={[styles.fieldInput, styles.fieldReadonly]}
-onPress={() => editUser?.email && handleCopyEmail(editUser.email)}
+onPress={() => {
+  const val = editUser?.email || editUser?.phone;
+  if (val) handleCopyEmail(val);
+}}
 >
-<Text style={styles.fieldReadonlyText}>{editUser?.email || ''}</Text>
+<Text style={styles.fieldReadonlyText}>{editUser?.email || editUser?.phone || ''}</Text>
 <Ionicons name="copy-outline" size={14} color={colors.textTertiary} />
 </TouchableOpacity>
 
@@ -492,6 +506,16 @@ placeholder="email@example.com"
 placeholderTextColor={colors.textTertiary}
 keyboardType="email-address"
 autoCapitalize="none"
+/>
+
+<Text style={styles.fieldLabel}>{t('phone')}</Text>
+<TextInput
+style={styles.fieldInput}
+value={createForm.phone}
+onChangeText={(v: string) => setCreateForm((p: typeof createForm) => ({ ...p, phone: v }))}
+placeholder="+998 ..."
+placeholderTextColor={colors.textTertiary}
+keyboardType="phone-pad"
 />
 
 <Text style={styles.fieldLabel}>{t('password')}</Text>

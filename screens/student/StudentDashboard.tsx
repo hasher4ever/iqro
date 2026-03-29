@@ -8,7 +8,7 @@ import { t } from '../../lib/i18n';
 import { getTashkentNow, formatMoney } from '../../lib/utils';
 import { NotificationBell } from '../../components/NotificationBell';
 import { Card, SectionTitle, EmptyState, ScreenLoader, Badge } from '../../components/UI';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function StudentDashboard({ navigation }: any) {
   const me = useQuery(api.users.me);

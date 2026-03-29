@@ -75,12 +75,14 @@ if (telegramType && ctx.scheduler) {
 
 // Helper: get all admin + super_admin user IDs for a company
 export async function getAdminIds(db: any, companyId: Id<"companies">): Promise<Id<"users">[]> {
+// Use the by_company_and_role index for both admin and super_admin
 const admins = await db.query("users")
-.withIndex("by_company", (q: any) => q.eq("companyId", companyId))
-.take(500);
-return admins
-.filter((u: any) => u.role === "super_admin" || u.role === "admin")
-.map((u: any) => u._id);
+.withIndex("by_company_and_role", (q: any) => q.eq("companyId", companyId).eq("role", "admin"))
+.take(100);
+const superAdmins = await db.query("users")
+.withIndex("by_company_and_role", (q: any) => q.eq("companyId", companyId).eq("role", "super_admin"))
+.take(100);
+return [...admins, ...superAdmins].map((u: any) => u._id);
 }
 
 // Helper: get teacher ID for a class
@@ -135,12 +137,15 @@ actorId: Id<"users"> | undefined;
 actorName: string | undefined;
 }> = [];
 
-for (const n of notifications) {
-let actorName: string | undefined;
-if (n.actorId) {
-const actor = await ctx.db.get(n.actorId);
-actorName = actor?.name;
+// Batch-fetch all actor names upfront
+const actorIds = [...new Set(notifications.filter((n: any) => n.actorId).map((n: any) => n.actorId))] as Id<"users">[];
+const actorNameMap: Record<string, string | undefined> = {};
+for (const aid of actorIds) {
+const actor = await ctx.db.get(aid);
+actorNameMap[aid as string] = actor?.name;
 }
+
+for (const n of notifications) {
 result.push({
 _id: n._id,
 _creationTime: n._creationTime,
@@ -148,7 +153,7 @@ type: n.type,
 isRead: n.isRead,
 data: n.data,
 actorId: n.actorId,
-actorName,
+actorName: n.actorId ? actorNameMap[n.actorId as string] : undefined,
 });
 }
 

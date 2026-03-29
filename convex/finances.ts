@@ -150,6 +150,37 @@ let totalFactualGathered = 0;
 let totalFactualLoss = 0;
 let totalAdvance = 0;
 
+// Batch-fetch all teachers, enrollments, and cancellations per class upfront
+const teacherIds = [...new Set(classes.map((c) => c.teacherId))] as Id<"users">[];
+for (const tid of teacherIds) {
+if (!teacherCache[tid as string]) {
+const teacher = await ctx.db.get(tid);
+teacherCache[tid as string] = { name: teacher?.name };
+}
+}
+
+const classEnrollmentsCache: Record<string, any[]> = {};
+const classCancelledDatesCache: Record<string, Set<string>> = {};
+const classAttendanceCache: Record<string, any[]> = {};
+
+for (const cls of classes) {
+const enrollments = await ctx.db.query("enrollments")
+.withIndex("by_class", (q: any) => q.eq("classId", cls._id))
+.take(500);
+classEnrollmentsCache[cls._id as string] = enrollments.filter((e: any) => e.status === "approved");
+
+const cancellations = await ctx.db.query("classCancellations")
+  .withIndex("by_class", (q: any) => q.eq("classId", cls._id))
+  .take(500);
+classCancelledDatesCache[cls._id as string] = new Set(cancellations.map((c: any) => c.date));
+
+// Fetch all attendance for this class in one query instead of per-student
+const attendance = await ctx.db.query("attendance")
+.withIndex("by_class_and_date", (q: any) => q.eq("classId", cls._id))
+.take(10000);
+classAttendanceCache[cls._id as string] = attendance;
+}
+
 for (const cls of classes) {
 const pricePerClass = cls.pricePerClass;
 const sharePercent = cls.teacherSharePercent ?? 50;
@@ -159,13 +190,9 @@ const chargeAbsent = cls.chargeAbsent ?? false;
 
 // Initialize teacher aggregation
 if (!teacherAgg[cls.teacherId]) {
-if (!teacherCache[cls.teacherId]) {
-const teacher = await ctx.db.get(cls.teacherId);
-teacherCache[cls.teacherId] = { name: teacher?.name };
-}
 teacherAgg[cls.teacherId] = {
 teacherId: cls.teacherId,
-teacherName: teacherCache[cls.teacherId].name,
+teacherName: teacherCache[cls.teacherId as string].name,
 projected: 0,
 factualAP: 0,
 factualToBePaid: 0,
@@ -175,27 +202,20 @@ totalClassRevenue: 0,
 };
 }
 
-// Get approved enrollments for this class
-const enrollments = await ctx.db.query("enrollments")
-.withIndex("by_class", (q: any) => q.eq("classId", cls._id))
-.take(500);
-const approved = enrollments.filter((e: any) => e.status === "approved");
+// Use cached enrollments and cancellations
+const approved = classEnrollmentsCache[cls._id as string];
 const enrolledCount = approved.length;
 
 if (enrolledCount === 0) continue;
 
-// Get cancelled dates
-const cancellations = await ctx.db.query("classCancellations")
-  .withIndex("by_class", (q: any) => q.eq("classId", cls._id))
-  .take(500);
-const cancelledDates = new Set(cancellations.map((c: any) => c.date));
+const cancelledDates = classCancelledDatesCache[cls._id as string];
 
 // Count scheduled lessons in period (exclude cancelled)
 const scheduledLessons = countScheduledLessons(cls.scheduleDays, startDate, endDate);
 // Count cancelled lessons in period
 let cancelledInPeriod = 0;
-for (const c of cancellations) {
-  if (isDateInPeriod(c.date, startDate, endDate)) cancelledInPeriod++;
+for (const d of cancelledDates) {
+  if (isDateInPeriod(d, startDate, endDate)) cancelledInPeriod++;
 }
 const effectiveLessons = Math.max(0, scheduledLessons - cancelledInPeriod);
 
@@ -218,10 +238,8 @@ totalProjected += classProjected;
 teacherAgg[cls.teacherId].projected += classProjected * teacherShare;
 teacherAgg[cls.teacherId].totalClassRevenue += classProjected;
 
-// Get all attendance records for this class
-const attendance = await ctx.db.query("attendance")
-.withIndex("by_class_and_date", (q: any) => q.eq("classId", cls._id))
-.take(10000);
+// Use cached attendance for this class
+const attendance = classAttendanceCache[cls._id as string];
 
 // Filter to period and exclude cancelled dates
 const periodAttendance = attendance.filter(
@@ -300,14 +318,10 @@ teacherAgg[cls.teacherId].factualLoss += classFactualLoss * teacherShare;
 for (const enrollment of approved) {
 const sid = enrollment.studentId;
 
-// Get ALL attendance for this student in this class (not just this period)
-const studentAttAll = await ctx.db.query("attendance")
-  .withIndex("by_student_and_class", (q: any) =>
-    q.eq("studentId", sid).eq("classId", cls._id)
-  )
-  .take(1000);
-// Filter out cancelled dates from all-time attendance
-const validAttAll = studentAttAll.filter((a: any) => !cancelledDates.has(a.date));
+// Filter all-time attendance from cache for this student in this class
+const validAttAll = attendance.filter(
+  (a: any) => a.studentId === sid && !cancelledDates.has(a.date)
+);
 
 // H9: respect chargeAbsent; C4: respect billingType
 let totalOwedAll: number;
@@ -565,18 +579,26 @@ createdBy: Id<"users">;
 createdByName: string | undefined;
 }> = [];
 
+// Batch-fetch all referenced users upfront
+const userIds = [...new Set(payments.flatMap((p) => [p.teacherId, p.createdBy]))] as Id<"users">[];
+const userNameCache: Record<string, string | undefined> = {};
+for (const uid of userIds) {
+if (!((uid as string) in userNameCache)) {
+const u = await ctx.db.get(uid);
+userNameCache[uid as string] = u?.name;
+}
+}
+
 for (const p of payments) {
-const teacher = await ctx.db.get(p.teacherId);
-const creator = await ctx.db.get(p.createdBy);
 result.push({
 _id: p._id,
 _creationTime: p._creationTime,
 teacherId: p.teacherId,
-teacherName: teacher?.name,
+teacherName: userNameCache[p.teacherId as string],
 amount: p.amount,
 note: p.note,
 createdBy: p.createdBy,
-createdByName: creator?.name,
+createdByName: userNameCache[p.createdBy as string],
 });
 }
 
@@ -653,6 +675,29 @@ export const getTeacherEarnings = query({
 
     let totalEarned = 0;
 
+    // Batch-fetch cancellations, enrollments, and attendance per class upfront
+    const teCancelledDatesCache: Record<string, Set<string>> = {};
+    const teEnrollmentsCache: Record<string, any[]> = {};
+    const teAttendanceCache: Record<string, any[]> = {};
+
+    for (const cls of classes) {
+      const cancellations = await ctx.db.query("classCancellations")
+        .withIndex("by_class", (q: any) => q.eq("classId", cls._id))
+        .take(500);
+      teCancelledDatesCache[cls._id as string] = new Set(cancellations.map((c: any) => c.date));
+
+      const enrollments = await ctx.db.query("enrollments")
+        .withIndex("by_class", (q: any) => q.eq("classId", cls._id))
+        .take(500);
+      teEnrollmentsCache[cls._id as string] = enrollments.filter((e: any) => e.status === "approved");
+
+      // Fetch all attendance for this class at once
+      const allAtt = await ctx.db.query("attendance")
+        .withIndex("by_class_and_date", (q: any) => q.eq("classId", cls._id))
+        .take(10000);
+      teAttendanceCache[cls._id as string] = allAtt;
+    }
+
     for (const cls of classes) {
       const sharePercent = cls.teacherSharePercent ?? 50;
       const teacherShare = sharePercent / 100;
@@ -660,23 +705,15 @@ export const getTeacherEarnings = query({
       const billingType = cls.billingType ?? "per_lesson";
       const chargeAbsent = cls.chargeAbsent ?? false;
 
-      // Get cancelled dates
-      const cancellations = await ctx.db.query("classCancellations")
-        .withIndex("by_class", (q: any) => q.eq("classId", cls._id))
-        .take(500);
-      const cancelledDates = new Set(cancellations.map((c: any) => c.date));
-
-      const enrollments = await ctx.db.query("enrollments")
-        .withIndex("by_class", (q: any) => q.eq("classId", cls._id))
-        .take(500);
-      const approved = enrollments.filter((e: any) => e.status === "approved");
+      const cancelledDates = teCancelledDatesCache[cls._id as string];
+      const approved = teEnrollmentsCache[cls._id as string];
+      const allClassAttendance = teAttendanceCache[cls._id as string];
 
       for (const enrollment of approved) {
-        const attendance = await ctx.db.query("attendance")
-          .withIndex("by_student_and_class", (q: any) =>
-            q.eq("studentId", enrollment.studentId).eq("classId", cls._id)
-          )
-          .take(1000);
+        // Filter attendance from cache for this student
+        const attendance = allClassAttendance.filter(
+          (a: any) => a.studentId === enrollment.studentId
+        );
 
         // Filter out cancelled dates, and optionally filter by period
         const validAttendance = attendance.filter(

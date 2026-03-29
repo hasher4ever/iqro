@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Modal, KeyboardAvoidingView, Platform, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, KeyboardAvoidingView, Platform, TextInput, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import { t } from '../lib/i18n';
-import { formatMoney } from '../lib/utils';
-import { Ionicons } from '@expo/vector-icons';
+import { showAlert, formatMoney } from '../lib/utils';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Card, Button, Input, ScreenLoader, EmptyState, Badge, SectionTitle } from '../components/UI';
 import { ScreenHeader } from '../components/ScreenHeader';
 
@@ -70,7 +70,7 @@ if (!teachers) return [];
 if (!teacherSearch) return teachers;
 const q = teacherSearch.toLowerCase();
 return teachers.filter((tc: any) =>
-(tc.name || '').toLowerCase().includes(q) || (tc.email || '').toLowerCase().includes(q)
+(tc.name || '').toLowerCase().includes(q) || (tc.email || '').toLowerCase().includes(q) || (tc.phone || '').toLowerCase().includes(q)
 );
 }, [teachers, teacherSearch]);
 
@@ -117,7 +117,7 @@ const handleCreate = async () => {
 setError('');
 const share = parseFloat(form.teacherSharePercent);
 if (isNaN(share) || share < 0 || share > 100) {
-Alert.alert(t('error'), t('invalid_teacher_share') || 'Teacher share must be 0-100%');
+showAlert(t('error'), t('invalid_teacher_share') || 'Teacher share must be 0-100%');
 return;
 }
 const priceValid = form.billingType === 'per_month' ? !!form.monthlyPrice : !!form.pricePerClass;
@@ -166,7 +166,7 @@ const handleEnroll = async (classId: string) => {
 try {
 await requestEnrollment({ classId: classId as any });
 } catch (err: any) {
-Alert.alert(t('error'), err?.message || t('error_generic'));
+showAlert(t('error'), err?.message || t('error_generic'));
 }
 };
 
@@ -343,7 +343,7 @@ style={styles.dropdownTrigger}
 onPress={() => setShowTeacherPicker(!showTeacherPicker)}
 >
 <Text style={selectedTeacher ? styles.dropdownValue : styles.dropdownPlaceholder}>
-{selectedTeacher ? (selectedTeacher.name || selectedTeacher.email) : t('select_teacher')}
+{selectedTeacher ? (selectedTeacher.name || selectedTeacher.email || selectedTeacher.phone) : t('select_teacher')}
 </Text>
 <Ionicons
 name={showTeacherPicker ? 'chevron-up' : 'chevron-down'}
@@ -375,9 +375,9 @@ setTeacherSearch('');
 >
 <View style={{ flex: 1 }}>
 <Text style={[styles.dropdownItemText, form.teacherId === tc._id && { color: colors.primary, fontWeight: fontWeight.semibold }]}>
-{tc.name || tc.email}
+{tc.name || tc.email || tc.phone}
 </Text>
-{tc.name && <Text style={styles.dropdownItemSub}>{tc.email}</Text>}
+{tc.name && <Text style={styles.dropdownItemSub}>{tc.email || tc.phone}</Text>}
 </View>
 {form.teacherId === tc._id && (
 <Ionicons name="checkmark" size={20} color={colors.primary} />

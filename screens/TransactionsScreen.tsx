@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { Id } from '../convex/_generated/dataModel';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import { t } from '../lib/i18n';
-import { formatMoney } from '../lib/utils';
+import { showAlert, formatMoney } from '../lib/utils';
 import { Card, ScreenLoader, EmptyState, StatusBadge } from '../components/UI';
 import { ScreenHeader } from '../components/ScreenHeader';
 
@@ -45,10 +45,10 @@ export default function TransactionsScreen({ navigation }: any) {
     setLoadingId(txId + '_confirm');
     confirmPayment({ transactionId: txId })
       .then(() => {
-        Alert.alert(t('success'), t('payment_confirmed_msg'));
+        showAlert(t('success'), t('payment_confirmed_msg'));
       })
       .catch((err: any) => {
-        Alert.alert(t('error'), err?.message || t('error_generic'));
+        showAlert(t('error'), err?.message || t('error_generic'));
       })
       .finally(() => {
         setLoadingId(null);
@@ -60,10 +60,10 @@ export default function TransactionsScreen({ navigation }: any) {
     setConfirmReverseId(null);
     createReversal({ originalTransactionId: txId })
       .then(() => {
-        Alert.alert(t('success'), t('transaction_reversed_msg'));
+        showAlert(t('success'), t('transaction_reversed_msg'));
       })
       .catch((err: any) => {
-        Alert.alert(t('error'), err?.message || t('error_generic'));
+        showAlert(t('error'), err?.message || t('error_generic'));
       })
       .finally(() => {
         setLoadingId(null);

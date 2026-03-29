@@ -30,17 +30,23 @@ if (!user.companyId) return [];
 
 const limit = args.limit || 100;
 
-// Query by company first, then filter by entityType in memory
-let logs = await ctx.db
-  .query("auditLogs")
-  .withIndex("by_company", (q: any) => q.eq("companyId", user.companyId))
-  .order("desc")
-  .take(limit * 3); // take extra to allow for filtering
-
+// Use compound index when entityType is provided, otherwise query by company
+let logs;
 if (args.entityType) {
-  logs = logs.filter((l: any) => l.entityType === args.entityType);
+  logs = await ctx.db
+    .query("auditLogs")
+    .withIndex("by_company_and_entityType", (q: any) =>
+      q.eq("companyId", user.companyId).eq("entityType", args.entityType)
+    )
+    .order("desc")
+    .take(limit);
+} else {
+  logs = await ctx.db
+    .query("auditLogs")
+    .withIndex("by_company", (q: any) => q.eq("companyId", user.companyId))
+    .order("desc")
+    .take(limit);
 }
-logs = logs.slice(0, limit);
 
 const result: Array<{
 _id: Id<"auditLogs">;
@@ -54,13 +60,20 @@ details: string | undefined;
 timestamp: number;
 }> = [];
 
+// Batch-fetch all user names upfront
+const logUserIds = [...new Set(logs.map((l: any) => l.userId))] as Id<"users">[];
+const logUserNameMap: Record<string, string | undefined> = {};
+for (const uid of logUserIds) {
+const u = await ctx.db.get(uid);
+logUserNameMap[uid as string] = u?.name;
+}
+
 for (const log of logs) {
-const logUser = await ctx.db.get(log.userId);
 result.push({
 _id: log._id,
 _creationTime: log._creationTime,
 userId: log.userId,
-userName: logUser?.name,
+userName: logUserNameMap[log.userId as string],
 action: log.action,
 entityType: log.entityType,
 entityId: log.entityId,

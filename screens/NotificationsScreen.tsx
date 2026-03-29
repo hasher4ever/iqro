@@ -7,7 +7,7 @@ import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/them
 import { t } from '../lib/i18n';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { ScreenLoader } from '../components/UI';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 const PAGE_SIZE = 20;
 
@@ -71,7 +71,7 @@ return { title: d.isActive ? t('activate') : t('deactivate'), body: d.targetName
 case 'user_archived':
 return { title: d.isArchived ? t('archive') : t('restore'), body: d.targetName || '' };
 case 'user_created':
-return { title: t('add_user'), body: `${d.email} (${d.role})` };
+return { title: t('add_user'), body: `${d.email || d.phone || ''} (${d.role})` };
 case 'password_reset':
 return { title: t('reset_password'), body: d.targetName || '' };
 default:

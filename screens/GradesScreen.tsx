@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { showAlert } from '../lib/utils';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import { t } from '../lib/i18n';
 import { Card, Button, ScreenLoader, EmptyState, SectionTitle } from '../components/UI';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScreenHeader } from '../components/ScreenHeader';
 
 const GRADE_PRESETS: Record<string, string[]> = {
@@ -63,7 +64,8 @@ if (!searchText.trim()) return students;
 const q = searchText.toLowerCase();
 return students.filter((s: any) =>
 (s.name || '').toLowerCase().includes(q) ||
-(s.email || '').toLowerCase().includes(q)
+(s.email || '').toLowerCase().includes(q) ||
+(s.phone || '').toLowerCase().includes(q)
 );
 }, [students, searchText]);
 
@@ -79,11 +81,11 @@ if (me && me.role !== 'admin' && me.role !== 'super_admin' && me.role !== 'teach
 
 const handleAddGrade = async () => {
 if (!selectedStudent || !gradeValue.trim()) {
-Alert.alert(t('error'), t('select_student_and_grade'));
+showAlert(t('error'), t('select_student_and_grade'));
 return;
 }
 if (!validateGrade(gradeValue, gradingSystem)) {
-Alert.alert(t('error'), t('invalid_grade_value'));
+showAlert(t('error'), t('invalid_grade_value'));
 return;
 }
 setSaving(true);
@@ -98,16 +100,19 @@ setGradeValue('');
 setAssignmentName('');
 // Keep student selected for rapid grading
 } catch (error: any) {
-Alert.alert(t('error'), error?.message || t('error_generic'));
+showAlert(t('error'), error?.message || t('error_generic'));
 } finally {
 setSaving(false);
 }
 };
 
 const handleEditGrade = async () => {
-if (!editingGradeId || !editValue.trim()) return;
+if (!editingGradeId || !editValue.trim()) {
+showAlert(t('error'), t('select_student_and_grade'));
+return;
+}
 if (!validateGrade(editValue, gradingSystem)) {
-Alert.alert(t('error'), t('invalid_grade_value'));
+showAlert(t('error'), t('invalid_grade_value'));
 return;
 }
 try {
@@ -115,7 +120,7 @@ await editGrade({ gradeId: editingGradeId as any, newValue: editValue.trim() });
 setEditingGradeId(null);
 setEditValue('');
 } catch (error: any) {
-Alert.alert(t('error'), error?.message || t('error_generic'));
+showAlert(t('error'), error?.message || t('error_generic'));
 }
 };
 
@@ -318,7 +323,7 @@ activeOpacity={0.7}
 <View style={styles.studentHeader}>
 <View style={{ flex: 1 }}>
 <Text style={styles.studentName}>
-{student.name || student.email || 'Unknown'}
+{student.name || student.email || student.phone || 'Unknown'}
 </Text>
 <View style={styles.studentMeta}>
 {gradeCount > 0 && (

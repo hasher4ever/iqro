@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import { t } from '../lib/i18n';
-import { formatMoney } from '../lib/utils';
+import { showAlert, formatMoney } from '../lib/utils';
 import { Card, Button, Input, ScreenLoader, EmptyState } from '../components/UI';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScreenHeader } from '../components/ScreenHeader';
 
 export default function PaymentScreen({ route, navigation }: any) {
@@ -24,12 +24,12 @@ if (students === undefined) return <ScreenLoader />;
 
 const handleRecord = async () => {
 if (!selectedStudent || !amount) {
-Alert.alert(t('error'), t('select_student_and_amount'));
+showAlert(t('error'), t('select_student_and_amount'));
 return;
 }
 const numAmount = parseFloat(amount);
 if (isNaN(numAmount) || numAmount <= 0) {
-Alert.alert(t('error'), t('enter_valid_amount'));
+showAlert(t('error'), t('enter_valid_amount'));
 return;
 }
 
@@ -41,12 +41,12 @@ studentId: selectedStudent as any,
 amount: numAmount,
 note: note || undefined,
 });
-Alert.alert(t('success'), t('payment') + ' recorded');
+showAlert(t('success'), t('payment') + ' recorded');
 setAmount('');
 setNote('');
 setSelectedStudent(null);
 } catch (error: any) {
-Alert.alert(t('error'), error?.message || t('error_generic'));
+showAlert(t('error'), error?.message || t('error_generic'));
 } finally {
 setSaving(false);
 }
@@ -116,7 +116,7 @@ onPress={onSelect}
 activeOpacity={0.7}
 >
 <View style={{ flex: 1 }}>
-<Text style={styles.studentName}>{student.name || student.email || 'Unknown'}</Text>
+<Text style={styles.studentName}>{student.name || student.email || student.phone || 'Unknown'}</Text>
 {balance && (
 <>
 <Text style={[styles.balanceText, { color: balance.balance < 0 ? colors.error : balance.balance > 0 ? colors.success : colors.textSecondary }]}>

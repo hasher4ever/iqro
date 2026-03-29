@@ -43,7 +43,7 @@ isActive: true,
 
 await ctx.db.patch(userId, {
 companyId,
-role: "admin",
+role: "super_admin",
 isActive: true,
 });
 

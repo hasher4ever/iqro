@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { showAlert } from '../lib/utils';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
@@ -7,7 +8,7 @@ import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/them
 import { t } from '../lib/i18n';
 import { Card, ScreenLoader, SectionTitle, Badge, Button, EmptyState } from '../components/UI';
 import { ScreenHeader } from '../components/ScreenHeader';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function ClassDetailScreen({ route, navigation }: any) {
 const { classId, className } = route.params;
@@ -47,14 +48,14 @@ const availableStudents = (allStudents || []).filter((s: any) => !enrolledIds.ha
 const handleApprove = async (enrollmentId: string) => {
 setSaving(true);
 try { await approveEnrollment({ enrollmentId: enrollmentId as any }); } catch (e: any) {
-  Alert.alert(t('error'), e?.message || t('error_generic'));
+  showAlert(t('error'), e?.message || t('error_generic'));
 } finally { setSaving(false); }
 };
 
 const handleReject = async (enrollmentId: string) => {
 setSaving(true);
 try { await rejectEnrollment({ enrollmentId: enrollmentId as any }); } catch (e: any) {
-  Alert.alert(t('error'), e?.message || t('error_generic'));
+  showAlert(t('error'), e?.message || t('error_generic'));
 } finally { setSaving(false); }
 };
 
@@ -63,14 +64,14 @@ setAdding(studentId);
 try {
 await enrollStudent({ classId, studentId: studentId as any });
 } catch (e: any) {
-  Alert.alert(t('error'), e?.message || t('error_generic'));
+  showAlert(t('error'), e?.message || t('error_generic'));
 }
 setAdding(null);
 };
 
 const handleRemoveStudent = async (enrollmentId: string) => {
 try { await removeEnrollment({ enrollmentId: enrollmentId as any }); } catch (e: any) {
-  Alert.alert(t('error'), e?.message || t('error_generic'));
+  showAlert(t('error'), e?.message || t('error_generic'));
 }
 };
 
@@ -81,7 +82,7 @@ const handleToggleActive = async () => {
     await setClassActive({ classId: classId as any, isActive: newActive });
     setConfirmTerminate(false);
   } catch (e: any) {
-    Alert.alert(t('error'), e?.message || t('error_generic'));
+    showAlert(t('error'), e?.message || t('error_generic'));
   }
   setTerminating(false);
 };
@@ -158,8 +159,8 @@ students.map((s: any, i: number) => (
 <Text style={styles.studentAvatarText}>{(s.name || '?')[0].toUpperCase()}</Text>
 </View>
 <View style={{ flex: 1 }}>
-<Text style={styles.studentName}>{s.name || s.email || 'Unknown'}</Text>
-{s.email && <Text style={styles.studentEmail}>{s.email}</Text>}
+<Text style={styles.studentName}>{s.name || s.email || s.phone || 'Unknown'}</Text>
+{(s.email || s.phone) && <Text style={styles.studentEmail}>{s.email || s.phone}</Text>}
 </View>
 {isAdmin && (
 <TouchableOpacity
@@ -252,7 +253,7 @@ availableStudents.map((s: any) => (
 </View>
 <View style={{ flex: 1 }}>
 <Text style={styles.studentName}>{s.name || 'No name'}</Text>
-<Text style={styles.studentEmail}>{s.email}</Text>
+<Text style={styles.studentEmail}>{s.email || s.phone}</Text>
 </View>
 <Button
 title={adding === s._id ? '...' : '+ ' + t('enroll')}
@@ -279,7 +280,7 @@ backBtn: { fontSize: fontSize.md, color: colors.primary, fontWeight: fontWeight.
 headerTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.text, flex: 1, textAlign: 'center' },
 content: { padding: spacing.lg, paddingBottom: 100 },
 actionsRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.lg },
-actionCard: { flex: 1, backgroundColor: colors.surface, borderRadius: borderRadius.lg, padding: spacing.lg, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
+actionCard: { flex: 1, backgroundColor: colors.surface, borderRadius: borderRadius.lg, padding: spacing.lg, alignItems: 'center', boxShadow: '0px 0px 4px rgba(0, 0, 0, 0.03)', elevation: 1 },
 actionLabel: { fontSize: fontSize.xs, color: colors.textSecondary, fontWeight: fontWeight.medium },
 emptyText: { fontSize: fontSize.sm, color: colors.textTertiary, textAlign: 'center', paddingVertical: spacing.lg },
 studentRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.md },

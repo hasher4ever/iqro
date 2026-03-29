@@ -591,7 +591,18 @@ const userId = await auth.getUserId(ctx);
 if (!userId) throw new Error("Not authenticated");
 const user = await ctx.db.get(userId);
 if (!user || user.role !== "super_admin" || !user.companyId) throw new Error("Not authorized");
-await ctx.db.patch(user.companyId, { telegramEnabled: false });
+const company = await ctx.db.get(user.companyId);
+if (!company) throw new Error("Company not found");
+// Schedule webhook removal before clearing the token
+if (company.telegramBotToken) {
+await ctx.scheduler.runAfter(0, internal.telegram.removeWebhook, { botToken: company.telegramBotToken });
+}
+await ctx.db.patch(user.companyId, {
+telegramEnabled: false,
+telegramBotToken: undefined,
+telegramBotUsername: undefined,
+telegramWebhookSecret: undefined,
+});
 return null;
 },
 });
@@ -632,6 +643,32 @@ tenantId, chatId, callbackQueryId,
 text: langConfirm[newLang] || langConfirm["uz_latin"],
 });
 return { action: "language_changed" };
+}
+
+// Start choice: "I have a code" or "Register new"
+if (callbackData === "start_choice:code") {
+await ctx.scheduler.runAfter(0, internal.telegram.answerCallback, { tenantId, callbackQueryId });
+await ctx.scheduler.runAfter(0, internal.telegram.sendSimpleMessage, {
+tenantId, chatId, text: "🔑 Send your 4-digit code from the app:\n\n🔑 Отправьте 4-значный код из приложения:\n\n🔑 Ilovadagi 4 raqamli kodni yuboring:",
+});
+return { action: "awaiting_code" };
+}
+if (callbackData === "start_choice:register") {
+// Delete old registration if exists
+const oldReg = await ctx.db.query("telegramRegistrations")
+.withIndex("by_chat", (q: any) => q.eq("chatId", chatId))
+.first();
+if (oldReg) await ctx.db.delete(oldReg._id);
+// Create new registration
+await ctx.db.insert("telegramRegistrations", {
+tenantId,
+chatId,
+step: "awaiting_language",
+status: "pending",
+});
+await ctx.scheduler.runAfter(0, internal.telegram.answerCallback, { tenantId, callbackQueryId });
+await ctx.scheduler.runAfter(0, internal.telegram.sendRegistrationLanguageKeyboard, { tenantId, chatId });
+return { action: "reg_started" };
 }
 
 // Registration flow: language selection
@@ -744,7 +781,7 @@ return { action: "ignored" };
 
 // ── UNLINKED USER: registration flow ──
 
-// /start: Begin registration or show status
+// /start: Ask user if they have a link code or want to register
 if (text.startsWith("/start") || text === "/start") {
 // Check for existing pending registration
 if (existingReg && existingReg.status === "pending" && existingReg.step === "submitted") {
@@ -760,17 +797,9 @@ if (existingReg) {
 await ctx.db.delete(existingReg._id);
 }
 
-// Create new registration
-await ctx.db.insert("telegramRegistrations", {
-tenantId,
-chatId,
-step: "awaiting_language",
-status: "pending",
-});
-
-// Send language selection
-await ctx.scheduler.runAfter(0, internal.telegram.sendRegistrationLanguageKeyboard, { tenantId, chatId });
-return { action: "reg_started" };
+// Show choice: link existing account or register new
+await ctx.scheduler.runAfter(0, internal.telegram.sendStartChoiceKeyboard, { tenantId, chatId });
+return { action: "start_choice" };
 }
 
 // 4-digit code linking (legacy support for app users)
@@ -912,6 +941,50 @@ headers: { "Content-Type": "application/json" },
 body: JSON.stringify({
 chat_id: args.chatId,
 text: "👋 Welcome! / Добро пожаловать! / Xush kelibsiz!\n\n🌐 Choose your language:",
+reply_markup: keyboard,
+}),
+});
+if (!resp.ok) {
+const errText = await resp.text();
+console.error(`Telegram API error: ${resp.status} ${errText}`);
+}
+return null;
+},
+});
+
+export const removeWebhook = internalAction({
+args: { botToken: v.string() },
+returns: v.null(),
+handler: async (_ctx, args) => {
+await fetch(`https://api.telegram.org/bot${args.botToken}/deleteWebhook`);
+return null;
+},
+});
+
+export const sendStartChoiceKeyboard = internalAction({
+args: { tenantId: v.id("companies"), chatId: v.string() },
+returns: v.null(),
+handler: async (ctx, args) => {
+const tokenResult = await ctx.runQuery(internal.telegram.getCompanyToken, { companyId: args.tenantId });
+if (!tokenResult) return null;
+const keyboard = {
+inline_keyboard: [
+[{ text: "🔑 I have a code / У меня есть код", callback_data: "start_choice:code" }],
+[{ text: "📝 Register new / Зарегистрироваться", callback_data: "start_choice:register" }],
+],
+};
+const resp = await fetch(`https://api.telegram.org/bot${tokenResult.token}/sendMessage`, {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({
+chat_id: args.chatId,
+text: "👋 Welcome! / Добро пожаловать! / Xush kelibsiz!\n\n" +
+"🔑 Already have an account? Tap below to enter your code.\n" +
+"📝 New here? Register to get started.\n\n" +
+"🔑 Уже есть аккаунт? Нажмите ниже и введите код.\n" +
+"📝 Новый пользователь? Зарегистрируйтесь.\n\n" +
+"🔑 Akkauntingiz bormi? Kodni kiriting.\n" +
+"📝 Yangimisiz? Ro'yxatdan o'ting.",
 reply_markup: keyboard,
 }),
 });

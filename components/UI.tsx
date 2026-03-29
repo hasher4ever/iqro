@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import {
 View,
 Text,
@@ -7,13 +7,12 @@ TextInput,
 StyleSheet,
 ActivityIndicator,
 ViewStyle,
-TextStyle,
 } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight } from '../lib/theme';
 
-export function Card({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
+export const Card = memo(function Card({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
 return <View style={[styles.card, style]}>{children}</View>;
-}
+});
 
 export function Button({
 title,
@@ -94,7 +93,7 @@ value: string;
 onChangeText: (text: string) => void;
 placeholder?: string;
 secureTextEntry?: boolean;
-keyboardType?: 'default' | 'email-address' | 'numeric';
+keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
 autoCapitalize?: 'none' | 'sentences' | 'words';
 multiline?: boolean;
 style?: ViewStyle;
@@ -117,7 +116,7 @@ multiline={multiline}
 );
 }
 
-export function Badge({
+export const Badge = memo(function Badge({
 text,
 color = colors.primary,
 bgColor,
@@ -131,28 +130,27 @@ return (
 <Text style={[styles.badgeText, { color }]}>{text}</Text>
 </View>
 );
-}
+});
 
-export function SectionTitle({ title, action }: { title: string; action?: React.ReactNode }) {
+export const SectionTitle = memo(function SectionTitle({ title, action }: { title: string; action?: React.ReactNode }) {
 return (
 <View style={styles.sectionHeader}>
 <Text style={styles.sectionTitle}>{title}</Text>
 {action}
 </View>
 );
-}
+});
 
-export function EmptyState({ message, icon }: { message: string; icon?: string }) {
+export const EmptyState = memo(function EmptyState({ message, icon }: { message: string; icon?: string }) {
 return (
 <View style={styles.emptyState}>
 {icon && <Text style={styles.emptyIcon}>{icon}</Text>}
 <Text style={styles.emptyText}>{message}</Text>
 </View>
 );
-}
+});
 
-export function StatusBadge({ status }: { status: string }) {
-const statusConfig: Record<string, { color: string; bg: string }> = {
+const STATUS_CONFIG: Record<string, { color: string; bg: string }> = {
 present: { color: colors.present, bg: colors.successLight },
 absent: { color: colors.absent, bg: colors.errorLight },
 late: { color: colors.late, bg: colors.warningLight },
@@ -167,13 +165,14 @@ reversal: { color: colors.error, bg: colors.errorLight },
 active: { color: colors.success, bg: colors.successLight },
 inactive: { color: colors.textTertiary, bg: colors.surfaceSecondary },
 };
+const STATUS_CONFIG_DEFAULT = { color: colors.textSecondary, bg: colors.surfaceSecondary };
 
-const config = statusConfig[status] || { color: colors.textSecondary, bg: colors.surfaceSecondary };
-
+export const StatusBadge = memo(function StatusBadge({ status }: { status: string }) {
+const config = STATUS_CONFIG[status] || STATUS_CONFIG_DEFAULT;
 return <Badge text={status.charAt(0).toUpperCase() + status.slice(1)} color={config.color} bgColor={config.bg} />;
-}
+});
 
-export function ListItem({
+export const ListItem = memo(function ListItem({
 title,
 subtitle,
 right,
@@ -200,9 +199,9 @@ activeOpacity={0.7}
 {right}
 </Container>
 );
-}
+});
 
-export function StatCard({
+export const StatCard = memo(function StatCard({
 title,
 value,
 color: statColor = colors.primary,
@@ -220,15 +219,15 @@ return (
 {subtitle && <Text style={styles.statSubtitle}>{subtitle}</Text>}
 </Card>
 );
-}
+});
 
-export function ScreenLoader() {
+export const ScreenLoader = memo(function ScreenLoader() {
 return (
 <View style={styles.loader}>
 <ActivityIndicator size="large" color={colors.primary} />
 </View>
 );
-}
+});
 
 const styles = StyleSheet.create({
 card: {
@@ -236,10 +235,7 @@ backgroundColor: colors.surface,
 borderRadius: borderRadius.lg,
 padding: spacing.lg,
 marginBottom: spacing.md,
-shadowColor: '#000',
-shadowOffset: { width: 0, height: 1 },
-shadowOpacity: 0.05,
-shadowRadius: 3,
+boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.05)',
 elevation: 1,
 },
 button: {

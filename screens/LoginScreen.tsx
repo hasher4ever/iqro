@@ -18,7 +18,8 @@ export default function LoginScreen() {
   const { signIn } = useAuthActions();
 
   const [step, setStep] = useState<'signIn' | 'signUp'>('signIn');
-  const [email, setEmail] = useState('');
+  const [loginType, setLoginType] = useState<'email' | 'phone'>('email');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,13 +35,14 @@ export default function LoginScreen() {
 
   const handleSignIn = async () => {
     setError('');
-    if (!email || !password) {
+    if (!identifier || !password) {
       setError(t('error') + ': ' + t('fill_all_fields'));
       return;
     }
     setLoading(true);
     try {
-      await signIn('password', { email, password, flow: 'signIn' });
+      // Password provider uses "email" as the identifier field for both email and phone
+      await signIn('password', { email: identifier.trim(), password, flow: 'signIn' });
     } catch (err: any) {
       const msg = err?.message || '';
       if (msg.includes('InvalidAccountId') || msg.includes('InvalidSecret') || msg.includes('invalid')) {
@@ -57,7 +59,7 @@ export default function LoginScreen() {
 
   const handleSignUp = async () => {
     setError('');
-    if (!name || !email || !password) {
+    if (!name || !identifier || !password) {
       setError(t('fill_all_fields'));
       return;
     }
@@ -67,9 +69,7 @@ export default function LoginScreen() {
     }
     setLoading(true);
     try {
-      await signIn('password', { email, password, name, flow: 'signUp' });
-      // After signUp, user becomes Authenticated.
-      // App.tsx RoleRouter will show CompanyOnboardingScreen automatically.
+      await signIn('password', { email: identifier.trim(), password, name, flow: 'signUp' });
     } catch (err: any) {
       const msg = err?.message || '';
       if (msg.includes('already exists') || msg.includes('AccountAlreadyExists')) {
@@ -144,13 +144,25 @@ export default function LoginScreen() {
             )}
 
             <Input
-              label={t('email')}
-              value={email}
-              onChangeText={setEmail}
-              placeholder={t('email')}
-              keyboardType="email-address"
+              label={loginType === 'email' ? t('email') : t('phone')}
+              value={identifier}
+              onChangeText={setIdentifier}
+              placeholder={loginType === 'email' ? t('email') : '+998 ...'}
+              keyboardType={loginType === 'email' ? 'email-address' : 'phone-pad'}
               autoCapitalize="none"
             />
+
+            <TouchableOpacity
+              onPress={() => {
+                setLoginType(loginType === 'email' ? 'phone' : 'email');
+                setIdentifier('');
+              }}
+              style={{ alignItems: 'center', paddingVertical: spacing.xs }}
+            >
+              <Text style={{ fontSize: fontSize.sm, color: colors.primary, fontWeight: fontWeight.medium }}>
+                {loginType === 'email' ? t('use_phone') : t('use_email')}
+              </Text>
+            </TouchableOpacity>
 
             <Input
               label={t('password')}
@@ -213,10 +225,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     marginBottom: spacing.lg,
     padding: spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     elevation: 3,
   },
   langOption: {
@@ -266,10 +275,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: borderRadius.xl,
     padding: spacing.xl,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.05)',
     elevation: 2,
   },
   errorBanner: {

@@ -200,14 +200,21 @@ assignmentName: string | undefined;
 isEdited: boolean | undefined;
 }> = [];
 
+// Batch-fetch all class names upfront
+const gradeClassIds = [...new Set(grades.map((g: any) => g.classId))] as Id<"classes">[];
+const gradeClassNameMap: Record<string, string | undefined> = {};
+for (const cid of gradeClassIds) {
+const cls = await ctx.db.get(cid);
+gradeClassNameMap[cid as string] = cls?.name;
+}
+
 for (const g of grades) {
 if (g.companyId !== user.companyId) continue;
-const cls = await ctx.db.get(g.classId);
 result.push({
 _id: g._id,
 _creationTime: g._creationTime,
 classId: g.classId,
-className: cls?.name,
+className: gradeClassNameMap[g.classId as string],
 value: g.value,
 gradingSystem: g.gradingSystem,
 period: g.period,
@@ -276,11 +283,18 @@ averageScore: number;
 gradeCount: number;
 }> = [];
 
+// Batch-fetch all student names upfront
+const leaderStudentIds = Object.keys(studentScores);
+const leaderStudentNameMap: Record<string, string | undefined> = {};
+for (const sid of leaderStudentIds) {
+const student = await ctx.db.get(sid as Id<"users">);
+leaderStudentNameMap[sid] = student?.name;
+}
+
 for (const [studentId, data] of Object.entries(studentScores)) {
-const student = await ctx.db.get(studentId as Id<"users">);
 result.push({
 studentId: studentId as Id<"users">,
-studentName: student?.name,
+studentName: leaderStudentNameMap[studentId],
 averageScore: Math.round((data.total / data.count) * 100) / 100,
 gradeCount: data.count,
 });

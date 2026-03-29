@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import { t } from '../lib/i18n';
-import { formatMoney } from '../lib/utils';
+import { showAlert, formatMoney } from '../lib/utils';
 import { Card, ScreenLoader, EmptyState } from '../components/UI';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScreenHeader } from '../components/ScreenHeader';
 
 type SortOption = 'debt' | 'name' | 'sessions';
@@ -150,12 +150,12 @@ export default function DebtorsScreen({ navigation }: any) {
                             studentName: d.studentName || 'Student',
                           });
                           if (result.success) {
-                            Alert.alert(t('success'), t('telegram_reminder_sent'));
+                            showAlert(t('success'), t('telegram_reminder_sent'));
                           } else {
-                            Alert.alert(t('error'), result.error || t('error_generic'));
+                            showAlert(t('error'), result.error || t('error_generic'));
                           }
                         } catch (e: any) {
-                          Alert.alert(t('error'), e.message || t('error_generic'));
+                          showAlert(t('error'), e.message || t('error_generic'));
                         }
                       }}
                     >

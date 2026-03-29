@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal } from 'react-native';
+import { showAlert } from '../lib/utils';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import { t } from '../lib/i18n';
 import { ScreenLoader } from '../components/UI';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScreenHeader } from '../components/ScreenHeader';
 
 type Period = 'day' | 'week' | 'month';
@@ -43,10 +44,13 @@ if (me && me.role !== 'admin' && me.role !== 'super_admin' && me.role !== 'teach
 }
 
 const handlePayTeacher = async () => {
-if (!selectedTeacherId || !payAmount) return;
+if (!selectedTeacherId || !payAmount) {
+showAlert(t('error'), t('fill_required_fields'));
+return;
+}
 const amount = parseFloat(payAmount);
 if (isNaN(amount) || amount <= 0) {
-Alert.alert(t('error'), t('amount') + ' > 0');
+showAlert(t('error'), t('amount') + ' > 0');
 return;
 }
 setSaving(true);
@@ -61,7 +65,7 @@ setPayAmount('');
 setPayNote('');
 setSelectedTeacherId(null);
 } catch (err: any) {
-Alert.alert(t('error'), err?.message || t('error_generic'));
+showAlert(t('error'), err?.message || t('error_generic'));
 } finally {
 setSaving(false);
 }
@@ -315,7 +319,7 @@ flexDirection: 'row', marginHorizontal: spacing.lg, marginBottom: spacing.sm,
 backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.lg, padding: 3,
 },
 periodBtn: { flex: 1, paddingVertical: spacing.sm, alignItems: 'center', borderRadius: borderRadius.md },
-periodBtnActive: { backgroundColor: colors.surface, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
+periodBtnActive: { backgroundColor: colors.surface, boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)', elevation: 2 },
 periodText: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: colors.textTertiary },
 periodTextActive: { color: colors.primary, fontWeight: fontWeight.semibold },
 dateRange: { textAlign: 'center', fontSize: fontSize.xs, color: colors.textTertiary, marginBottom: spacing.sm },

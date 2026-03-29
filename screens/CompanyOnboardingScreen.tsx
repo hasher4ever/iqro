@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView } from 'react-native';
+import { showAlert } from '../lib/utils';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMutation } from 'convex/react';
 import { useAuthActions } from '@convex-dev/auth/react';
@@ -7,7 +8,7 @@ import { api } from '../convex/_generated/api';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import { t } from '../lib/i18n';
 import { Button } from '../components/UI';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function CompanyOnboardingScreen() {
   const { signOut } = useAuthActions();
@@ -21,14 +22,14 @@ export default function CompanyOnboardingScreen() {
 
   const handleCreate = async () => {
     if (!companyName.trim()) {
-      Alert.alert(t('error'), t('company_name_required'));
+      showAlert(t('error'), t('company_name_required'));
       return;
     }
     setLoading(true);
     try {
       await createCompany({ name: companyName.trim() });
     } catch (e: any) {
-      Alert.alert(t('error'), e.message);
+      showAlert(t('error'), e.message);
     } finally {
       setLoading(false);
     }
@@ -36,14 +37,14 @@ export default function CompanyOnboardingScreen() {
 
   const handleJoin = async () => {
     if (!inviteCode.trim()) {
-      Alert.alert(t('error'), t('enter_org_code'));
+      showAlert(t('error'), t('enter_org_code'));
       return;
     }
     setLoading(true);
     try {
       await joinCompany({ orgCode: inviteCode.trim().toUpperCase() });
     } catch (e: any) {
-      Alert.alert(t('error'), e.message);
+      showAlert(t('error'), e.message);
     } finally {
       setLoading(false);
     }

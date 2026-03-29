@@ -72,30 +72,46 @@ isActive: boolean;
 enrolledCount: number;
 }> = [];
 
+// Batch-fetch all teachers, rooms, and enrollment counts upfront
+const teacherIds = [...new Set(classes.map((c: any) => c.teacherId))] as Id<"users">[];
+const roomIds = [...new Set(classes.map((c: any) => c.roomId))] as Id<"rooms">[];
+const teacherNameMap: Record<string, string | undefined> = {};
+const roomNameMap: Record<string, string | undefined> = {};
+
+for (const tid of teacherIds) {
+const t = await ctx.db.get(tid);
+teacherNameMap[tid as string] = t?.name;
+}
+for (const rid of roomIds) {
+const r = await ctx.db.get(rid);
+roomNameMap[rid as string] = r?.name;
+}
+
+const enrolledCountMap: Record<string, number> = {};
 for (const cls of classes) {
-const teacher = await ctx.db.get(cls.teacherId);
-const room = await ctx.db.get(cls.roomId);
 const enrollments = await ctx.db
 .query("enrollments")
 .withIndex("by_class", (q: any) => q.eq("classId", cls._id))
 .take(500);
-const enrolledCount = enrollments.filter((e: any) => e.status === "approved").length;
+enrolledCountMap[cls._id as string] = enrollments.filter((e: any) => e.status === "approved").length;
+}
 
+for (const cls of classes) {
 result.push({
 _id: cls._id,
 _creationTime: cls._creationTime,
 name: cls.name,
 subjectName: cls.subjectName,
 teacherId: cls.teacherId,
-teacherName: teacher?.name,
+teacherName: teacherNameMap[cls.teacherId as string],
 roomId: cls.roomId,
-roomName: room?.name,
+roomName: roomNameMap[cls.roomId as string],
 gradingSystem: cls.gradingSystem,
 pricePerClass: cls.pricePerClass,
 teacherSharePercent: cls.teacherSharePercent,
 scheduleDays: cls.scheduleDays,
 isActive: cls.isActive,
-enrolledCount,
+enrolledCount: enrolledCountMap[cls._id as string] ?? 0,
 });
 }
 return result;
@@ -193,17 +209,23 @@ gradingSystem: "a_f" | "0_100" | "1_5";
 isActive: boolean;
 }> = [];
 
-for (const cls of classes) {
-if (!cls.isActive) continue;
-if (cls.companyId !== user.companyId) continue;
-const room = await ctx.db.get(cls.roomId);
+// Filter first, then batch-fetch rooms
+const activeClasses = classes.filter((cls: any) => cls.isActive && cls.companyId === user.companyId);
+const roomIdsForTeacher = [...new Set(activeClasses.map((c: any) => c.roomId))] as Id<"rooms">[];
+const roomNameMapForTeacher: Record<string, string | undefined> = {};
+for (const rid of roomIdsForTeacher) {
+const r = await ctx.db.get(rid);
+roomNameMapForTeacher[rid as string] = r?.name;
+}
+
+for (const cls of activeClasses) {
 result.push({
 _id: cls._id,
 name: cls.name,
 subjectName: cls.subjectName,
 scheduleDays: cls.scheduleDays,
 roomId: cls.roomId,
-roomName: room?.name,
+roomName: roomNameMapForTeacher[cls.roomId as string],
 pricePerClass: cls.pricePerClass,
 gradingSystem: cls.gradingSystem,
 isActive: cls.isActive,
@@ -555,16 +577,27 @@ className: string | undefined;
 status: string;
 }> = [];
 
+// Batch-fetch all students and classes upfront
+const enrollStudentIds = [...new Set(enrollments.map((e: any) => e.studentId))] as Id<"users">[];
+const enrollClassIds = [...new Set(enrollments.map((e: any) => e.classId))] as Id<"classes">[];
+const enrollNameMap: Record<string, string | undefined> = {};
+for (const sid of enrollStudentIds) {
+const s = await ctx.db.get(sid);
+enrollNameMap[sid as string] = s?.name;
+}
+for (const cid of enrollClassIds) {
+const c = await ctx.db.get(cid);
+enrollNameMap[cid as string] = c?.name;
+}
+
 for (const e of enrollments) {
-const student = await ctx.db.get(e.studentId);
-const cls = await ctx.db.get(e.classId);
 result.push({
 _id: e._id,
 _creationTime: e._creationTime,
 studentId: e.studentId,
-studentName: student?.name,
+studentName: enrollNameMap[e.studentId as string],
 classId: e.classId,
-className: cls?.name,
+className: enrollNameMap[e.classId as string],
 status: e.status,
 });
 }
@@ -579,6 +612,7 @@ returns: v.array(v.object({
 _id: v.id("users"),
 name: v.optional(v.string()),
 email: v.optional(v.string()),
+phone: v.optional(v.string()),
 enrollmentId: v.id("enrollments"),
 })),
 handler: async (ctx, args) => {
@@ -599,6 +633,7 @@ const result: Array<{
 _id: Id<"users">;
 name: string | undefined;
 email: string | undefined;
+phone: string | undefined;
 enrollmentId: Id<"enrollments">;
 }> = [];
 
@@ -610,6 +645,7 @@ result.push({
 _id: student._id,
 name: student.name,
 email: student.email,
+phone: student.phone,
 enrollmentId: e._id,
 });
 }
@@ -625,6 +661,7 @@ returns: v.array(v.object({
 _id: v.id("users"),
 name: v.optional(v.string()),
 email: v.optional(v.string()),
+phone: v.optional(v.string()),
 })),
 handler: async (ctx) => {
 const userId = await auth.getUserId(ctx);
@@ -638,7 +675,7 @@ const teachers = await ctx.db.query("users")
   )
   .take(100);
 
-return teachers.map((t: any) => ({ _id: t._id, name: t.name, email: t.email }));
+return teachers.map((t: any) => ({ _id: t._id, name: t.name, email: t.email, phone: t.phone }));
 },
 });
 
@@ -648,6 +685,7 @@ export const listStudentUsers = query({
     _id: v.id("users"),
     name: v.optional(v.string()),
     email: v.optional(v.string()),
+    phone: v.optional(v.string()),
   })),
   handler: async (ctx) => {
     const userId = await auth.getUserId(ctx);
@@ -661,7 +699,7 @@ export const listStudentUsers = query({
       )
       .take(200);
 
-    return students.map((s: any) => ({ _id: s._id, name: s.name, email: s.email }));
+    return students.map((s: any) => ({ _id: s._id, name: s.name, email: s.email, phone: s.phone }));
   },
 });
 
@@ -898,15 +936,22 @@ export const getClassCancellations = query({
       cancelledByName: string | undefined;
     }> = [];
 
+    // Batch-fetch all cancelledBy users upfront
+    const cancellerIds = [...new Set(cancellations.map((c: any) => c.cancelledBy))] as Id<"users">[];
+    const cancellerNameMap: Record<string, string | undefined> = {};
+    for (const uid of cancellerIds) {
+      const u = await ctx.db.get(uid);
+      cancellerNameMap[uid as string] = u?.name;
+    }
+
     for (const c of cancellations) {
-      const cancelledByUser = await ctx.db.get(c.cancelledBy);
       result.push({
         _id: c._id,
         _creationTime: c._creationTime,
         date: c.date,
         reason: c.reason,
         cancelledBy: c.cancelledBy,
-        cancelledByName: cancelledByUser?.name,
+        cancelledByName: cancellerNameMap[c.cancelledBy as string],
       });
     }
 

@@ -6,7 +6,7 @@ import { api } from '../convex/_generated/api';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import { t } from '../lib/i18n';
 import { ScreenLoader, EmptyState } from '../components/UI';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function GradesTabScreen({ navigation }: any) {
 const me = useQuery(api.users.me);

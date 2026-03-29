@@ -47,6 +47,7 @@ export const hashAndResetPassword = internalAction({
 export const hashAndCreateUser = internalAction({
   args: {
     email: v.string(),
+    phone: v.optional(v.string()),
     name: v.string(),
     hashedPassword: v.optional(v.string()),
     password: v.string(),
@@ -59,6 +60,7 @@ export const hashAndCreateUser = internalAction({
     const hashedPassword = await hashPassword(args.password);
     const userId = await ctx.runMutation(internal.adminAuthHelpers.createUserWithAccount, {
       email: args.email,
+      phone: args.phone,
       name: args.name,
       hashedPassword,
       role: args.role,

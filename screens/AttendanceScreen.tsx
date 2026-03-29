@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { showAlert } from '../lib/utils';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
@@ -7,7 +8,7 @@ import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/them
 import { t } from '../lib/i18n';
 import { Card, Button, ScreenLoader, EmptyState, Badge } from '../components/UI';
 import { ScreenHeader } from '../components/ScreenHeader';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused';
 
@@ -55,7 +56,7 @@ const goToPrevDay = () => {
 const goToNextDay = () => {
   const next = shiftDate(selectedDate, 1);
   if (next > getToday()) {
-    Alert.alert(t('error'), t('no_future_dates'));
+    showAlert(t('error'), t('no_future_dates'));
     return;
   }
   setSelectedDate(next);
@@ -100,10 +101,10 @@ studentId: s._id,
 status: getStatus(s._id) as any,
 }));
 await markAttendance({ classId, date: selectedDate, records: attendanceRecords });
-Alert.alert(t('success'), t('attendance') + ' saved');
+showAlert(t('success'), t('attendance') + ' saved');
 navigation.goBack();
 } catch (error: any) {
-Alert.alert(t('error'), error?.message || t('error_generic'));
+showAlert(t('error'), error?.message || t('error_generic'));
 } finally {
 setSaving(false);
 }
@@ -112,9 +113,9 @@ setSaving(false);
 const handleUnlock = async () => {
 try {
 await unlockAttendance({ classId, durationMinutes: 30 });
-Alert.alert(t('success'), t('attendance_unlocked_30min'));
+showAlert(t('success'), t('attendance_unlocked_30min'));
 } catch (error: any) {
-Alert.alert(t('error'), error?.message || t('error_generic'));
+showAlert(t('error'), error?.message || t('error_generic'));
 }
 };
 
@@ -181,7 +182,7 @@ activeOpacity={canSave ? 0.6 : 1}
 disabled={!canSave}
 >
 <View style={[styles.statusIndicator, { backgroundColor: statusColors[status] }]} />
-<Text style={[styles.studentName, !canSave && { color: colors.textTertiary }]}>{student.name || student.email || 'Unknown'}</Text>
+<Text style={[styles.studentName, !canSave && { color: colors.textTertiary }]}>{student.name || student.email || student.phone || 'Unknown'}</Text>
 <Badge
 text={t(status)}
 color={canSave ? statusColors[status] : colors.textTertiary}

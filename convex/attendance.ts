@@ -113,15 +113,20 @@ export const markAttendance = mutation({
       }
     }
 
-    for (const record of args.records) {
-      const existing = await ctx.db
-        .query("attendance")
-        .withIndex("by_class_and_date", (q: any) =>
-          q.eq("classId", args.classId).eq("date", today)
-        )
-        .take(500);
+    // Fetch all existing attendance for this class+date ONCE, not per student
+    const existingAttendance = await ctx.db
+      .query("attendance")
+      .withIndex("by_class_and_date", (q: any) =>
+        q.eq("classId", args.classId).eq("date", today)
+      )
+      .take(500);
+    const existingByStudent: Record<string, any> = {};
+    for (const a of existingAttendance) {
+      existingByStudent[a.studentId as string] = a;
+    }
 
-      const existingRecord = existing.find((a: any) => a.studentId === record.studentId);
+    for (const record of args.records) {
+      const existingRecord = existingByStudent[record.studentId as string];
 
       if (existingRecord) {
         const oldStatus = existingRecord.status;
@@ -308,12 +313,19 @@ export const getClassAttendance = query({
       version: number;
     }> = [];
 
+    // Batch-fetch all student names upfront
+    const attStudentIds = [...new Set(records.map((r: any) => r.studentId))] as Id<"users">[];
+    const attStudentNameMap: Record<string, string | undefined> = {};
+    for (const sid of attStudentIds) {
+      const student = await ctx.db.get(sid);
+      attStudentNameMap[sid as string] = student?.name;
+    }
+
     for (const r of records) {
-      const student = await ctx.db.get(r.studentId);
       result.push({
         _id: r._id,
         studentId: r.studentId,
-        studentName: student?.name,
+        studentName: attStudentNameMap[r.studentId as string],
         status: r.status,
         version: r.version,
       });
