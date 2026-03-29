@@ -16,9 +16,12 @@ const buildId = buildIdMatch[1];
 console.log(`Updating Convex with buildId: ${buildId}`);
 
 try {
-  execSync(`npx convex run appMeta:setLatestBuildId '{"buildId":"${buildId}"}'`, {
+  // Use JSON with spaces to ensure proper parsing by convex CLI
+  const args = `{ "buildId": "${buildId}" }`;
+  execSync(`npx convex run appMeta:setLatestBuildId '${args}'`, {
     stdio: 'inherit',
     cwd: path.join(__dirname, '..'),
+    shell: 'bash',
   });
   console.log('Build ID updated in Convex successfully');
 } catch (e) {
