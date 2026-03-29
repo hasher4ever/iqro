@@ -18,7 +18,7 @@ export default function LoginScreen() {
   const { signIn } = useAuthActions();
 
   const [step, setStep] = useState<'signIn' | 'signUp'>('signIn');
-  const [loginType, setLoginType] = useState<'email' | 'phone'>('email');
+  const [loginType, setLoginType] = useState<'email' | 'phone'>('phone');
   const [email, setEmail] = useState('');
   const [phoneDigits, setPhoneDigits] = useState('');
   const [password, setPassword] = useState('');
@@ -149,9 +149,28 @@ export default function LoginScreen() {
               />
             )}
 
+            {/* Email / Phone toggle */}
+            <View style={styles.toggleRow}>
+              <TouchableOpacity
+                style={[styles.toggleBtn, loginType === 'phone' && styles.toggleBtnActive]}
+                onPress={() => { setLoginType('phone'); setEmail(''); }}
+              >
+                <Text style={[styles.toggleText, loginType === 'phone' && styles.toggleTextActive]}>
+                  {t('phone')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.toggleBtn, loginType === 'email' && styles.toggleBtnActive]}
+                onPress={() => { setLoginType('email'); setPhoneDigits(''); }}
+              >
+                <Text style={[styles.toggleText, loginType === 'email' && styles.toggleTextActive]}>
+                  {t('email')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
             {loginType === 'email' ? (
               <Input
-                label={t('email')}
                 value={email}
                 onChangeText={setEmail}
                 placeholder={t('email')}
@@ -160,24 +179,10 @@ export default function LoginScreen() {
               />
             ) : (
               <PhoneInput
-                label={t('phone')}
                 value={phoneDigits}
                 onChangeText={setPhoneDigits}
               />
             )}
-
-            <TouchableOpacity
-              onPress={() => {
-                setLoginType(loginType === 'email' ? 'phone' : 'email');
-                setEmail('');
-                setPhoneDigits('');
-              }}
-              style={{ alignItems: 'center', paddingVertical: spacing.xs }}
-            >
-              <Text style={{ fontSize: fontSize.sm, color: colors.primary, fontWeight: fontWeight.medium }}>
-                {loginType === 'email' ? t('use_phone') : t('use_email')}
-              </Text>
-            </TouchableOpacity>
 
             <Input
               label={t('password')}
@@ -314,5 +319,29 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     color: colors.primary,
     fontWeight: fontWeight.medium,
+  },
+  toggleRow: {
+    flexDirection: 'row' as const,
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: borderRadius.md,
+    padding: 3,
+    marginBottom: spacing.md,
+  },
+  toggleBtn: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    alignItems: 'center' as const,
+    borderRadius: borderRadius.sm,
+  },
+  toggleBtnActive: {
+    backgroundColor: colors.primary,
+  },
+  toggleText: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.textSecondary,
+  },
+  toggleTextActive: {
+    color: colors.textInverse,
   },
 });

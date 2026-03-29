@@ -81,6 +81,7 @@ const [saving, setSaving] = useState(false);
 
 // Create modal state
 const [showCreateModal, setShowCreateModal] = useState(false);
+const [createLoginType, setCreateLoginType] = useState<'email' | 'phone'>('phone');
 const [createForm, setCreateForm] = useState({ name: '', email: '', phone: '', password: '', role: 'student_parent' });
 const [creating, setCreating] = useState(false);
 
@@ -502,6 +503,24 @@ placeholderTextColor={colors.textTertiary}
 autoCapitalize="words"
 />
 
+{/* Email / Phone toggle */}
+<View style={styles.idToggleRow}>
+<TouchableOpacity
+style={[styles.idToggleBtn, createLoginType === 'phone' && styles.idToggleBtnActive]}
+onPress={() => { setCreateLoginType('phone'); setCreateForm((p: typeof createForm) => ({ ...p, email: '' })); }}
+>
+<Text style={[styles.idToggleText, createLoginType === 'phone' && styles.idToggleTextActive]}>{t('phone')}</Text>
+</TouchableOpacity>
+<TouchableOpacity
+style={[styles.idToggleBtn, createLoginType === 'email' && styles.idToggleBtnActive]}
+onPress={() => { setCreateLoginType('email'); setCreateForm((p: typeof createForm) => ({ ...p, phone: '' })); }}
+>
+<Text style={[styles.idToggleText, createLoginType === 'email' && styles.idToggleTextActive]}>{t('email')}</Text>
+</TouchableOpacity>
+</View>
+
+{createLoginType === 'email' ? (
+<>
 <Text style={styles.fieldLabel}>{t('email')}</Text>
 <TextInput
 style={styles.fieldInput}
@@ -512,12 +531,14 @@ placeholderTextColor={colors.textTertiary}
 keyboardType="email-address"
 autoCapitalize="none"
 />
-
+</>
+) : (
 <PhoneInput
 label={t('phone')}
 value={createForm.phone}
 onChangeText={(v: string) => setCreateForm((p: typeof createForm) => ({ ...p, phone: v }))}
 />
+)}
 
 <Text style={styles.fieldLabel}>{t('password')}</Text>
 <TextInput
@@ -754,6 +775,30 @@ toggleHint: {
 fontSize: fontSize.xs,
 color: colors.textTertiary,
 marginTop: 1,
+},
+idToggleRow: {
+flexDirection: 'row',
+backgroundColor: colors.surfaceSecondary,
+borderRadius: borderRadius.md,
+padding: 3,
+marginBottom: spacing.md,
+},
+idToggleBtn: {
+flex: 1,
+paddingVertical: spacing.sm,
+alignItems: 'center' as const,
+borderRadius: borderRadius.sm,
+},
+idToggleBtnActive: {
+backgroundColor: colors.primary,
+},
+idToggleText: {
+fontSize: fontSize.sm,
+fontWeight: fontWeight.semibold,
+color: colors.textSecondary,
+},
+idToggleTextActive: {
+color: colors.textInverse,
 },
 });
 
