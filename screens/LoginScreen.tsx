@@ -12,20 +12,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthActions } from '@convex-dev/auth/react';
 import { colors, spacing, borderRadius, fontSize, fontWeight } from '../lib/theme';
 import { t, setLanguage, getLanguage, LANGUAGES, getLanguageLabel, Language } from '../lib/i18n';
-import { Button, Input } from '../components/UI';
+import { Button, Input, PhoneInput, getFullPhone } from '../components/UI';
 
 export default function LoginScreen() {
   const { signIn } = useAuthActions();
 
   const [step, setStep] = useState<'signIn' | 'signUp'>('signIn');
   const [loginType, setLoginType] = useState<'email' | 'phone'>('email');
-  const [identifier, setIdentifier] = useState('');
+  const [email, setEmail] = useState('');
+  const [phoneDigits, setPhoneDigits] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [lang, setLang] = useState<Language>(getLanguage());
   const [showLangPicker, setShowLangPicker] = useState(false);
+
+  // Build the identifier to send to auth
+  const identifier = loginType === 'email' ? email.trim() : getFullPhone(phoneDigits);
 
   const handleLanguageChange = (newLang: Language) => {
     setLanguage(newLang);
@@ -35,7 +39,8 @@ export default function LoginScreen() {
 
   const handleSignIn = async () => {
     setError('');
-    if (!identifier || !password) {
+    const hasIdentifier = loginType === 'email' ? !!email.trim() : phoneDigits.length === 9;
+    if (!hasIdentifier || !password) {
       setError(t('error') + ': ' + t('fill_all_fields'));
       return;
     }
@@ -59,7 +64,8 @@ export default function LoginScreen() {
 
   const handleSignUp = async () => {
     setError('');
-    if (!name || !identifier || !password) {
+    const hasIdentifier = loginType === 'email' ? !!email.trim() : phoneDigits.length === 9;
+    if (!name || !hasIdentifier || !password) {
       setError(t('fill_all_fields'));
       return;
     }
@@ -143,19 +149,28 @@ export default function LoginScreen() {
               />
             )}
 
-            <Input
-              label={loginType === 'email' ? t('email') : t('phone')}
-              value={identifier}
-              onChangeText={setIdentifier}
-              placeholder={loginType === 'email' ? t('email') : '+998 ...'}
-              keyboardType={loginType === 'email' ? 'email-address' : 'phone-pad'}
-              autoCapitalize="none"
-            />
+            {loginType === 'email' ? (
+              <Input
+                label={t('email')}
+                value={email}
+                onChangeText={setEmail}
+                placeholder={t('email')}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            ) : (
+              <PhoneInput
+                label={t('phone')}
+                value={phoneDigits}
+                onChangeText={setPhoneDigits}
+              />
+            )}
 
             <TouchableOpacity
               onPress={() => {
                 setLoginType(loginType === 'email' ? 'phone' : 'email');
-                setIdentifier('');
+                setEmail('');
+                setPhoneDigits('');
               }}
               style={{ alignItems: 'center', paddingVertical: spacing.xs }}
             >

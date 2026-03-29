@@ -116,6 +116,66 @@ multiline={multiline}
 );
 }
 
+/**
+ * Format raw digits (max 9) into "XX XXX XX XX" display format.
+ */
+function formatPhoneDigits(digits: string): string {
+  const d = digits.replace(/\D/g, '').slice(0, 9);
+  if (d.length <= 2) return d;
+  if (d.length <= 5) return `${d.slice(0, 2)} ${d.slice(2)}`;
+  if (d.length <= 7) return `${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}`;
+  return `${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5, 7)} ${d.slice(7)}`;
+}
+
+/**
+ * Phone input with fixed +998 prefix. Value is the raw digits after +998 (max 9 digits).
+ * Full number returned by getFullPhone() is "+998XXXXXXXXX".
+ */
+export function PhoneInput({
+  label,
+  value,
+  onChangeText,
+  style,
+}: {
+  label?: string;
+  value: string;
+  onChangeText: (digits: string) => void;
+  style?: ViewStyle;
+}) {
+  const handleChange = (text: string) => {
+    // Strip everything except digits
+    const digits = text.replace(/\D/g, '').slice(0, 9);
+    onChangeText(digits);
+  };
+
+  return (
+    <View style={[{ marginBottom: spacing.md }, style]}>
+      {label && <Text style={styles.inputLabel}>{label}</Text>}
+      <View style={[styles.input, { flexDirection: 'row', alignItems: 'center' }]}>
+        <Text style={{ fontSize: fontSize.md, color: colors.text, fontWeight: fontWeight.semibold, marginRight: spacing.xs }}>
+          +998
+        </Text>
+        <TextInput
+          style={{ flex: 1, fontSize: fontSize.md, color: colors.text, padding: 0, margin: 0 }}
+          value={formatPhoneDigits(value)}
+          onChangeText={handleChange}
+          placeholder="XX XXX XX XX"
+          placeholderTextColor={colors.textTertiary}
+          keyboardType="phone-pad"
+          maxLength={12}
+        />
+      </View>
+    </View>
+  );
+}
+
+/** Build the full phone string from raw digits: "+998901234567" */
+export function getFullPhone(digits: string): string {
+  const clean = digits.replace(/\D/g, '');
+  if (clean.length !== 9) return '';
+  return `+998${clean}`;
+}
+
 export const Badge = memo(function Badge({
 text,
 color = colors.primary,

@@ -6,7 +6,7 @@ import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import { t } from '../lib/i18n';
-import { Button, ScreenLoader, EmptyState, SectionTitle } from '../components/UI';
+import { Button, ScreenLoader, EmptyState, SectionTitle, PhoneInput, getFullPhone } from '../components/UI';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScreenHeader } from '../components/ScreenHeader';
 import * as Clipboard from 'expo-clipboard';
@@ -176,8 +176,13 @@ if (!createForm.name || !createForm.password) {
 showAlert(t('error'), t('fill_required_fields'));
 return;
 }
-if (!createForm.email && !createForm.phone) {
+const fullPhone = getFullPhone(createForm.phone);
+if (!createForm.email && !fullPhone) {
 showAlert(t('error'), t('email_or_phone_required'));
+return;
+}
+if (createForm.phone && !fullPhone) {
+showAlert(t('error'), t('invalid_phone'));
 return;
 }
 if (createForm.password.length < 6) {
@@ -189,7 +194,7 @@ setCreating(true);
 await adminCreateUser({
   name: createForm.name,
   email: createForm.email || undefined,
-  phone: createForm.phone || undefined,
+  phone: fullPhone || undefined,
   password: createForm.password,
   role: createForm.role,
 });
@@ -508,14 +513,10 @@ keyboardType="email-address"
 autoCapitalize="none"
 />
 
-<Text style={styles.fieldLabel}>{t('phone')}</Text>
-<TextInput
-style={styles.fieldInput}
+<PhoneInput
+label={t('phone')}
 value={createForm.phone}
 onChangeText={(v: string) => setCreateForm((p: typeof createForm) => ({ ...p, phone: v }))}
-placeholder="+998 ..."
-placeholderTextColor={colors.textTertiary}
-keyboardType="phone-pad"
 />
 
 <Text style={styles.fieldLabel}>{t('password')}</Text>
