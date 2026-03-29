@@ -10,6 +10,7 @@
 
 import type * as adminAuth from "../adminAuth.js";
 import type * as adminAuthHelpers from "../adminAuthHelpers.js";
+import type * as appMeta from "../appMeta.js";
 import type * as attendance from "../attendance.js";
 import type * as auditLogs from "../auditLogs.js";
 import type * as auth from "../auth.js";
@@ -35,6 +36,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   adminAuth: typeof adminAuth;
   adminAuthHelpers: typeof adminAuthHelpers;
+  appMeta: typeof appMeta;
   attendance: typeof attendance;
   auditLogs: typeof auditLogs;
   auth: typeof auth;
