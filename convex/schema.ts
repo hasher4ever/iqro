@@ -331,4 +331,10 @@ notifications: defineTable({
   .index("by_user", ["userId"])
   .index("by_user_and_read", ["userId", "isRead"])
   .index("by_company", ["companyId"]),
+
+appMeta: defineTable({
+  key: v.string(),
+  value: v.string(),
+})
+  .index("by_key", ["key"]),
 });

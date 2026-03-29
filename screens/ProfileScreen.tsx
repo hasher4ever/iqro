@@ -439,7 +439,9 @@ export default function ProfileScreen({ navigation }: any) {
           ))}
         </Card>
 
-        <Text style={styles.buildVersion}>Build: {BUILD_INFO.buildId} ({BUILD_INFO.buildTime})</Text>
+        <TouchableOpacity onPress={() => showAlert(`Build: ${BUILD_INFO.buildId}`, BUILD_INFO.changelog)}>
+          <Text style={styles.buildVersion}>Build: {BUILD_INFO.buildId} ({BUILD_INFO.buildTime})</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );

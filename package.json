@@ -15,7 +15,7 @@
     "convex:dev": "npx convex dev",
     "convex:deploy": "npx convex dev --once",
     "postexport": "node -e \"const fs=require('fs'),p=require('path');function cp(s,d){try{if(fs.statSync(s).isDirectory()){fs.mkdirSync(d,{recursive:true});fs.readdirSync(s).forEach(f=>cp(p.join(s,f),p.join(d,f)))}else{fs.mkdirSync(p.dirname(d),{recursive:true});fs.copyFileSync(s,d)}}catch(e){}}cp('dist/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts','dist/fonts');cp('public/_redirects','dist/_redirects');cp('public/_headers','dist/_headers')\"",
-    "deploy:all": "node scripts/generate-build-info.js && npx convex dev --once && npx expo export --platform web && npm run postexport && npx wrangler pages deploy dist --project-name=iqro-learn"
+    "deploy:all": "node scripts/generate-build-info.js && npx convex dev --once && npx expo export --platform web && npm run postexport && npx wrangler pages deploy dist --project-name=iqro-learn && node scripts/post-deploy.js"
   },
   "dependencies": {
     "@auth/core": "^0.37.4",

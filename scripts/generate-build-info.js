@@ -7,10 +7,19 @@ const now = new Date();
 const timestamp = now.toISOString().replace('T', ' ').substring(0, 19);
 const buildNumber = Math.floor(now.getTime() / 1000).toString(36); // compact sortable id
 
+// Get recent commit messages for changelog (last 10 commits)
+let changelog = '';
+try {
+  changelog = execSync('git log --oneline -10 --pretty=format:"%h %s"').toString().trim();
+} catch (e) {
+  changelog = 'No changelog available';
+}
+
 const info = {
   commitHash: hash,
   buildTime: timestamp,
   buildId: `${hash}-${buildNumber}`,
+  changelog: changelog,
 };
 
 const outPath = path.join(__dirname, '..', 'lib', 'buildInfo.ts');

@@ -1,15 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Authenticated, Unauthenticated, AuthLoading } from 'convex/react';
-import { useQuery } from 'convex/react'; // Edited: added useQuery import
+import { useQuery } from 'convex/react';
 import { api } from './convex/_generated/api';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { colors, fontSize, fontWeight } from './lib/theme';
+import { colors, fontSize, fontWeight, spacing, borderRadius } from './lib/theme';
 import { t, setLanguage } from './lib/i18n';
+import { BUILD_INFO } from './lib/buildInfo';
 
 // Eagerly loaded screens (needed immediately)
 import LoginScreen from './screens/LoginScreen';
@@ -128,6 +129,34 @@ return <Ionicons name={iconName} size={size} color={color} />;
 );
 }
 
+function UpdateBanner() {
+  const latestBuildId = useQuery(api.appMeta.getLatestBuildId);
+  const [dismissed, setDismissed] = useState(false);
+
+  if (dismissed || !latestBuildId || latestBuildId === BUILD_INFO.buildId) return null;
+
+  return (
+    <View style={styles.updateBanner}>
+      <Ionicons name="arrow-up-circle" size={18} color={colors.textInverse} />
+      <Text style={styles.updateText}>{t('update_available')}</Text>
+      <TouchableOpacity
+        onPress={() => {
+          if (Platform.OS === 'web') {
+            window.location.reload();
+          }
+          setDismissed(true);
+        }}
+        style={styles.updateBtn}
+      >
+        <Text style={styles.updateBtnText}>{t('refresh')}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => setDismissed(true)} style={{ padding: 4 }}>
+        <Ionicons name="close" size={16} color={colors.textInverse} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 function RoleRouter() {
 const me = useQuery(api.users.me);
 
@@ -169,6 +198,8 @@ return <NoRoleScreen />;
 }
 
 return (
+<View style={{ flex: 1 }}>
+<UpdateBanner />
 <Stack.Navigator screenOptions={{
   headerShown: true,
   headerBackTitle: t('back'),
@@ -193,6 +224,7 @@ return (
 <Stack.Screen name="TelegramSettings" component={LazyScreen(TelegramSettingsScreen)} options={{ headerShown: false, title: `${t('telegram')} — Iqro Learn` }} />
 <Stack.Screen name="Notifications" component={LazyScreen(NotificationsScreen)} options={{ headerShown: false, title: `${t('notifications')} — Iqro Learn` }} />
 </Stack.Navigator>
+</View>
 );
 }
 
@@ -240,5 +272,30 @@ loadingText: {
 marginTop: 12,
 fontSize: fontSize.md,
 color: colors.textSecondary,
+},
+updateBanner: {
+flexDirection: 'row',
+alignItems: 'center',
+backgroundColor: colors.primary,
+paddingHorizontal: spacing.md,
+paddingVertical: spacing.sm,
+gap: spacing.sm,
+},
+updateText: {
+flex: 1,
+color: colors.textInverse,
+fontSize: fontSize.sm,
+fontWeight: fontWeight.medium,
+},
+updateBtn: {
+backgroundColor: 'rgba(255,255,255,0.2)',
+paddingHorizontal: spacing.md,
+paddingVertical: spacing.xs,
+borderRadius: borderRadius.sm,
+},
+updateBtnText: {
+color: colors.textInverse,
+fontSize: fontSize.sm,
+fontWeight: fontWeight.semibold,
 },
 });
