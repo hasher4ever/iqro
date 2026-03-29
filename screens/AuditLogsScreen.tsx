@@ -5,7 +5,7 @@ import { useQuery } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import { t } from '../lib/i18n';
-import { Card, ScreenLoader, EmptyState } from '../components/UI';
+import { ScreenLoader, EmptyState } from '../components/UI';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScreenHeader } from '../components/ScreenHeader';
 
@@ -70,6 +70,7 @@ style={styles.searchInput}
 </View>
 
 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll} contentContainerStyle={styles.filterContent}>
+<View style={styles.chipContainer}>
 <TouchableOpacity
 style={[styles.chip, !actionFilter && styles.chipActive]}
 onPress={() => setActionFilter('')}
@@ -87,38 +88,41 @@ onPress={() => setActionFilter(action)}
 </Text>
 </TouchableOpacity>
 ))}
+</View>
 </ScrollView>
 
 <ScrollView contentContainerStyle={styles.content}>
 {filtered.length === 0 ? (
 <EmptyState message={t('no_data')} />
 ) : (
-filtered.slice(0, visibleCount).map((log: any) => (
-<View key={log._id}>
-<Card>
-<View style={styles.logRow}>
-<View style={styles.logDot} />
-<View style={{ flex: 1 }}>
-<Text style={styles.logAction}>{log.action.replace(/_/g, ' ')}</Text>
-<Text style={styles.logMeta}>
-{log.userName || 'System'} • {log.entityType}
-</Text>
-{log.details && (
-<Text style={styles.logDetails} numberOfLines={2}>{log.details}</Text>
-)}
+filtered.slice(0, visibleCount).map((log: any, index: number) => (
+<View key={log._id} style={styles.logCard}>
+<View style={styles.logHeader}>
+<View style={styles.actionBadge}>
+<Text style={styles.actionBadgeText}>{log.action.replace(/_/g, ' ')}</Text>
+</View>
 <Text style={styles.logTime}>{new Date(log.timestamp).toLocaleString()}</Text>
 </View>
+<View style={styles.logBody}>
+<View style={styles.logMetaRow}>
+<Ionicons name="person-outline" size={14} color={colors.textTertiary} />
+<Text style={styles.logMeta}>{log.userName || 'System'}</Text>
+<View style={styles.metaDot} />
+<Ionicons name="folder-outline" size={14} color={colors.textTertiary} />
+<Text style={styles.logMeta}>{log.entityType}</Text>
 </View>
-</Card>
+{log.details && (
+<View style={styles.detailsBox}>
+<Text style={styles.logDetails} numberOfLines={2}>{log.details}</Text>
+</View>
+)}
+</View>
 </View>
 ))
 )}
 {filtered.length > visibleCount && (
-<TouchableOpacity
-  style={{ padding: 12, alignItems: 'center' }}
-  onPress={() => setVisibleCount(prev => prev + PAGE_SIZE)}
->
-  <Text style={{ color: colors.primary, fontWeight: '600' }}>{t('load_more')}</Text>
+<TouchableOpacity style={styles.loadMoreBtn} onPress={() => setVisibleCount(prev => prev + PAGE_SIZE)}>
+<Text style={styles.loadMoreText}>{t('load_more')}</Text>
 </TouchableOpacity>
 )}
 </ScrollView>
@@ -128,23 +132,28 @@ filtered.slice(0, visibleCount).map((log: any) => (
 
 function getStyles() { return StyleSheet.create({
 container: { flex: 1, backgroundColor: colors.background },
-header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
-backBtn: { fontSize: fontSize.md, color: colors.primary, fontWeight: fontWeight.medium },
-headerTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.text },
 searchBox: { paddingHorizontal: spacing.lg, marginBottom: spacing.sm },
 searchInput: { backgroundColor: colors.surface, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, fontSize: fontSize.sm, color: colors.text, borderWidth: 1, borderColor: colors.border },
-filterScroll: { maxHeight: 48, marginBottom: spacing.md },
-filterContent: { paddingHorizontal: spacing.lg, gap: spacing.sm, alignItems: 'center' as const },
-chip: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full, backgroundColor: colors.surfaceSecondary, borderWidth: 0 },
-chipActive: { backgroundColor: colors.primary },
-chipText: { fontSize: fontSize.sm, color: colors.textSecondary, fontWeight: fontWeight.medium },
-chipTextActive: { fontSize: fontSize.sm, color: colors.textInverse, fontWeight: fontWeight.semibold },
+filterScroll: { maxHeight: 52, marginBottom: spacing.md },
+filterContent: { paddingHorizontal: spacing.lg, alignItems: 'center' as const },
+chipContainer: { flexDirection: 'row', backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.lg, padding: 3, gap: 2 },
+chip: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.md, alignItems: 'center' },
+chipActive: { backgroundColor: colors.surface, elevation: 1, boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.08)' },
+chipText: { fontSize: fontSize.sm, color: colors.textTertiary, fontWeight: fontWeight.medium },
+chipTextActive: { fontSize: fontSize.sm, color: colors.primary, fontWeight: fontWeight.semibold },
 content: { padding: spacing.lg, paddingBottom: 100 },
-logRow: { flexDirection: 'row' },
-logDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary, marginTop: 6, marginRight: spacing.md },
-logAction: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: colors.text, textTransform: 'capitalize' },
-logMeta: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: 2 },
-logDetails: { fontSize: fontSize.xs, color: colors.textTertiary, marginTop: 4, fontFamily: 'monospace' },
-logTime: { fontSize: fontSize.xs, color: colors.textTertiary, marginTop: 4 },
+logCard: { backgroundColor: colors.surface, borderRadius: borderRadius.lg, marginBottom: spacing.md, overflow: 'hidden', boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.06)', elevation: 1 },
+logHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.sm },
+actionBadge: { backgroundColor: colors.primaryLight, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: borderRadius.sm },
+actionBadgeText: { fontSize: fontSize.xs, fontWeight: fontWeight.semibold, color: colors.primary, textTransform: 'capitalize' },
+logBody: { paddingHorizontal: spacing.lg, paddingBottom: spacing.md },
+logMetaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+metaDot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: colors.textTertiary, marginHorizontal: spacing.xs },
+logMeta: { fontSize: fontSize.sm, color: colors.textSecondary },
+detailsBox: { backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.sm, padding: spacing.sm, marginTop: spacing.sm },
+logDetails: { fontSize: fontSize.xs, color: colors.textTertiary, fontFamily: 'monospace' },
+logTime: { fontSize: fontSize.xs, color: colors.textTertiary },
+loadMoreBtn: { paddingVertical: spacing.md, alignItems: 'center', backgroundColor: colors.surface, borderRadius: borderRadius.md, marginTop: spacing.sm },
+loadMoreText: { color: colors.primary, fontWeight: fontWeight.semibold, fontSize: fontSize.sm },
 }); }
 
