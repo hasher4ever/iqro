@@ -16,12 +16,16 @@ const buildId = buildIdMatch[1];
 console.log(`Updating Convex with buildId: ${buildId}`);
 
 try {
-  // Use JSON with spaces to ensure proper parsing by convex CLI
-  const args = `{ "buildId": "${buildId}" }`;
-  execSync(`npx convex run appMeta:setLatestBuildId '${args}'`, {
+  const args = JSON.stringify({ buildId });
+  const isWindows = process.platform === 'win32';
+  // On Windows, use cmd shell with double-quote escaping; on Unix, use bash with single quotes
+  const cmd = isWindows
+    ? `npx convex run appMeta:setLatestBuildId "${args.replace(/"/g, '\\"')}"`
+    : `npx convex run appMeta:setLatestBuildId '${args}'`;
+  execSync(cmd, {
     stdio: 'inherit',
     cwd: path.join(__dirname, '..'),
-    shell: 'bash',
+    shell: isWindows ? true : 'bash',
   });
   console.log('Build ID updated in Convex successfully');
 } catch (e) {
