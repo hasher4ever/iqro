@@ -9,6 +9,8 @@ import { ScreenLoader, EmptyState } from '../components/UI';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function GradesTabScreen({ navigation }: any) {
+const styles = getStyles();
+
 const me = useQuery(api.users.me);
 const allClasses = useQuery(api.classes.list);
 const teacherClasses = useQuery(api.classes.getByTeacher, {});
@@ -106,7 +108,7 @@ className: cls.name,
 );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
 container: { flex: 1, backgroundColor: colors.background },
 headerRow: {
 flexDirection: 'row',
@@ -178,4 +180,4 @@ fontSize: fontSize.sm,
 color: colors.textSecondary,
 marginTop: 1,
 },
-});
+}); }

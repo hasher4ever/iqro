@@ -15,6 +15,8 @@ import { t, setLanguage, getLanguage, LANGUAGES, getLanguageLabel, Language } fr
 import { Button, Input, PhoneInput, getFullPhone } from '../components/UI';
 
 export default function LoginScreen() {
+const styles = getStyles();
+
   const { signIn } = useAuthActions();
 
   const [step, setStep] = useState<'signIn' | 'signUp'>('signIn');
@@ -217,7 +219,7 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -344,4 +346,4 @@ const styles = StyleSheet.create({
   toggleTextActive: {
     color: colors.textInverse,
   },
-});
+}); }

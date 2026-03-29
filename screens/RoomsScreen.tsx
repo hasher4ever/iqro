@@ -10,6 +10,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScreenHeader } from '../components/ScreenHeader';
 
 export default function RoomsScreen({ navigation }: any) {
+const styles = getStyles();
+
 const me = useQuery(api.users.me);
 const rooms = useQuery(api.rooms.list);
 const createRoom = useMutation(api.rooms.create);
@@ -160,6 +162,7 @@ style={{ flex: 1 }}
 }
 
 function RoomCard({ room, onEdit, onToggle }: { room: any; onEdit: () => void; onToggle: () => void }) {
+const styles = getStyles();
 const schedule = useQuery(api.rooms.getRoomSchedule, { roomId: room._id });
 
 return (
@@ -211,7 +214,7 @@ color={room.isActive ? colors.success : colors.textTertiary}
 );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
 container: { flex: 1, backgroundColor: colors.background },
 header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
 backBtn: { fontSize: fontSize.md, color: colors.primary, fontWeight: fontWeight.medium },
@@ -238,4 +241,4 @@ modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'fl
 modal: { backgroundColor: colors.surface, borderBottomLeftRadius: borderRadius.xl, borderBottomRightRadius: borderRadius.xl, padding: spacing.xl },
 modalTitle: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: colors.text, marginBottom: spacing.lg },
 modalActions: { flexDirection: 'row', marginTop: spacing.lg },
-});
+}); }

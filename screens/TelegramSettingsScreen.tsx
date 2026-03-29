@@ -11,6 +11,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScreenHeader } from '../components/ScreenHeader';
 
 export default function TelegramSettingsScreen({ navigation }: any) {
+const styles = getStyles();
+
 const me = useQuery(api.users.me);
 const config = useQuery(api.telegram.getTelegramConfig);
 const linkedCount = useQuery(api.telegram.getLinkedUsersCount);
@@ -227,7 +229,7 @@ color={log.status === 'sent' ? colors.success : log.status === 'failed' ? colors
 );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
 container: { flex: 1, backgroundColor: colors.background },
 content: { padding: spacing.lg, paddingBottom: 100 },
 centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
@@ -284,6 +286,6 @@ flowDesc: { fontSize: fontSize.sm, color: colors.textSecondary, lineHeight: 20, 
 flowDivider: { height: 1, backgroundColor: colors.borderLight, marginVertical: spacing.sm },
 warningBox: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, backgroundColor: colors.warningLight, borderRadius: borderRadius.sm, padding: spacing.sm },
 warningText: { fontSize: fontSize.sm, color: colors.warning, flex: 1, lineHeight: 20 },
-});
+}); }
 
 // ... existing code ...

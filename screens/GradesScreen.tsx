@@ -17,6 +17,8 @@ const GRADE_PRESETS: Record<string, string[]> = {
 };
 
 export default function GradesScreen({ route, navigation }: any) {
+const styles = getStyles();
+
 const { classId, className } = route.params;
 const me = useQuery(api.users.me);
 const students = useQuery(api.classes.getClassStudents, { classId });
@@ -297,6 +299,7 @@ onEditChange,
 onSaveEdit,
 onCancelEdit,
 }: any) {
+const styles = getStyles();
 const grades = useQuery(api.grades.getStudentGrades, {
 studentId: student._id,
 classId,
@@ -397,7 +400,7 @@ onLongPress={() => onStartEdit(g._id, g.value)}
 );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
 container: { flex: 1, backgroundColor: colors.background },
 header: {
 flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -585,4 +588,4 @@ fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: colors.text,
 width: 36, paddingVertical: 2, textAlign: 'center',
 },
 editChipAction: { padding: 4 },
-});
+}); }

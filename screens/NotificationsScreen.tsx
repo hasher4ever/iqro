@@ -91,6 +91,8 @@ return `${days}d`;
 }
 
 export default function NotificationsScreen({ navigation }: any) {
+const styles = getStyles();
+
 const notifications = useQuery(api.notifications.list, { limit: 100 });
 const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 const markAsRead = useMutation(api.notifications.markAsRead);
@@ -170,7 +172,7 @@ ListEmptyComponent={
 );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
 container: { flex: 1, backgroundColor: colors.background },
 list: { paddingHorizontal: spacing.md, paddingBottom: spacing.xl },
 item: {
@@ -206,4 +208,4 @@ marginLeft: spacing.sm,
 },
 empty: { alignItems: 'center', justifyContent: 'center', paddingTop: 100 },
 emptyText: { fontSize: fontSize.md, color: colors.textTertiary, marginTop: spacing.sm },
-});
+}); }

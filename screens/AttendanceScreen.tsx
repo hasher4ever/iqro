@@ -34,6 +34,8 @@ function formatDateDisplay(dateStr: string): string {
 }
 
 export default function AttendanceScreen({ route, navigation }: any) {
+const styles = getStyles();
+
 const { classId, className } = route.params;
 const [selectedDate, setSelectedDate] = useState<string>(getToday());
 const me = useQuery(api.users.me);
@@ -207,7 +209,7 @@ loading={saving}
 );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
 container: { flex: 1, backgroundColor: colors.background },
 header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
 backBtn: { fontSize: fontSize.md, color: colors.primary, fontWeight: fontWeight.medium },
@@ -234,4 +236,4 @@ windowClosedBanner: { backgroundColor: colors.errorLight, borderRadius: borderRa
 windowClosedText: { fontSize: fontSize.sm, color: colors.error, textAlign: 'center', fontWeight: fontWeight.medium },
 unlockBanner: { backgroundColor: colors.warningLight, borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.md },
 unlockBannerText: { fontSize: fontSize.sm, color: colors.warning, textAlign: 'center', fontWeight: fontWeight.medium },
-});
+}); }

@@ -11,6 +11,8 @@ import { Card, SectionTitle, EmptyState, ScreenLoader, Badge } from '../../compo
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function StudentDashboard({ navigation }: any) {
+const styles = getStyles();
+
   const me = useQuery(api.users.me);
   const enrollments = useQuery(api.classes.listEnrollments, { status: 'approved' as any });
   const schedule = useQuery(api.rooms.getFullSchedule);
@@ -160,6 +162,7 @@ export default function StudentDashboard({ navigation }: any) {
 }
 
 function StudentClassCard({ enrollment, studentId, navigation, today, currentMinutes }: any) {
+  const styles = getStyles();
   const stats = useQuery(api.attendance.getStudentAttendanceStats, {
     studentId,
     classId: enrollment.classId,
@@ -227,7 +230,7 @@ function StudentClassCard({ enrollment, studentId, navigation, today, currentMin
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, paddingBottom: 100 },
   headerRow: {
@@ -337,5 +340,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   catalogBtnText: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: colors.primary },
-});
+}); }
 

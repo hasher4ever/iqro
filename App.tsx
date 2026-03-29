@@ -11,6 +11,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors, fontSize, fontWeight, spacing, borderRadius } from './lib/theme';
 import { t, setLanguage } from './lib/i18n';
 import { BUILD_INFO } from './lib/buildInfo';
+import { ThemeProvider } from './components/ThemeProvider';
 
 // Eagerly loaded screens (needed immediately)
 import LoginScreen from './screens/LoginScreen';
@@ -230,6 +231,7 @@ return (
 
 export default function App() {
 return (
+<ThemeProvider>
 <SafeAreaProvider style={styles.container}>
 <NavigationContainer
 	documentTitle={{
@@ -253,19 +255,20 @@ return (
 </Authenticated>
 </NavigationContainer>
 </SafeAreaProvider>
+</ThemeProvider>
 );
 }
 
 const tabStyle = { fontSize: fontSize.xs, fontWeight: fontWeight.medium, color: colors.textSecondary };
 
-const styles = StyleSheet.create({
+const styles = {
 container: {
 flex: 1,
 },
 loader: {
 flex: 1,
-justifyContent: 'center',
-alignItems: 'center',
+justifyContent: 'center' as const,
+alignItems: 'center' as const,
 backgroundColor: colors.background,
 },
 loadingText: {
@@ -274,8 +277,8 @@ fontSize: fontSize.md,
 color: colors.textSecondary,
 },
 updateBanner: {
-flexDirection: 'row',
-alignItems: 'center',
+flexDirection: 'row' as const,
+alignItems: 'center' as const,
 backgroundColor: colors.primary,
 paddingHorizontal: spacing.md,
 paddingVertical: spacing.sm,
@@ -298,4 +301,4 @@ color: colors.textInverse,
 fontSize: fontSize.sm,
 fontWeight: fontWeight.semibold,
 },
-});
+};

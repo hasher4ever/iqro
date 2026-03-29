@@ -11,6 +11,8 @@ import { Button } from '../components/UI';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function CompanyOnboardingScreen() {
+const styles = getStyles();
+
   const { signOut } = useAuthActions();
   const createCompany = useMutation(api.companies.create);
   const joinCompany = useMutation(api.companies.joinByOrgCode);
@@ -148,7 +150,7 @@ export default function CompanyOnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { flexGrow: 1, justifyContent: 'center', padding: spacing.xl },
   iconCircle: {
@@ -209,4 +211,4 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm, color: colors.textTertiary,
     textAlign: 'center', marginBottom: spacing.lg, lineHeight: 20,
   },
-});
+}); }

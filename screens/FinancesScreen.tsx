@@ -17,6 +17,8 @@ return new Intl.NumberFormat('en-US').format(Math.round(amount));
 }
 
 export default function FinancesScreen({ navigation }: any) {
+const styles = getStyles();
+
 const me = useQuery(api.users.me);
 const [period, setPeriod] = useState<Period>('month');
 const [payModalVisible, setPayModalVisible] = useState(false);
@@ -310,7 +312,7 @@ multiline
 );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
 container: { flex: 1, backgroundColor: colors.background },
 
 // Period
@@ -393,4 +395,4 @@ modalTeacher: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, mar
 modalTeacherText: { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: colors.text },
 inputLabel: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: colors.text, marginBottom: spacing.xs, marginTop: spacing.md },
 input: { backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md, padding: spacing.md, fontSize: fontSize.md, color: colors.text },
-});
+}); }

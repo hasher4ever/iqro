@@ -4,14 +4,25 @@ View,
 Text,
 TouchableOpacity,
 TextInput,
-StyleSheet,
 ActivityIndicator,
 ViewStyle,
 } from 'react-native';
-import { colors, spacing, borderRadius, fontSize, fontWeight } from '../lib/theme';
+import { colors, spacing, borderRadius, fontSize, fontWeight, useTheme } from '../lib/theme';
 
 export const Card = memo(function Card({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
-return <View style={[styles.card, style]}>{children}</View>;
+  const { colors: c } = useTheme();
+  return (
+    <View style={[{
+      backgroundColor: c.surface,
+      borderRadius: borderRadius.lg,
+      padding: spacing.lg,
+      marginBottom: spacing.md,
+      boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.06)',
+      elevation: 1,
+    }, style]}>
+      {children}
+    </View>
+  );
 });
 
 export function Button({
@@ -31,20 +42,22 @@ loading?: boolean;
 disabled?: boolean;
 style?: ViewStyle;
 }) {
+const { colors: c } = useTheme();
+
 const bg = {
-primary: colors.primary,
-secondary: colors.surfaceSecondary,
-danger: colors.error,
+primary: c.primary,
+secondary: c.surfaceSecondary,
+danger: c.error,
 ghost: 'transparent',
 outline: 'transparent',
 }[variant];
 
 const textColor = {
-primary: colors.textInverse,
-secondary: colors.text,
-danger: colors.textInverse,
-ghost: colors.primary,
-outline: colors.primary,
+primary: c.textInverse,
+secondary: c.text,
+danger: c.textInverse,
+ghost: c.primary,
+outline: c.primary,
 }[variant];
 
 const height = { sm: 36, md: 44, lg: 52 }[size];
@@ -53,12 +66,15 @@ const textSize = { sm: fontSize.sm, md: fontSize.md, lg: fontSize.lg }[size];
 return (
 <TouchableOpacity
 style={[
-styles.button,
 {
-backgroundColor: disabled ? colors.border : bg,
-height,
-borderWidth: variant === 'outline' ? 1.5 : 0,
-borderColor: variant === 'outline' ? colors.primary : undefined,
+  borderRadius: borderRadius.md,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  paddingHorizontal: spacing.xl,
+  backgroundColor: disabled ? c.border : bg,
+  height,
+  borderWidth: variant === 'outline' ? 1.5 : 0,
+  borderColor: variant === 'outline' ? c.primary : undefined,
 },
 style,
 ]}
@@ -69,7 +85,7 @@ activeOpacity={0.7}
 {loading ? (
 <ActivityIndicator color={textColor} size="small" />
 ) : (
-<Text style={[styles.buttonText, { color: textColor, fontSize: textSize }]}>
+<Text style={{ color: textColor, fontSize: textSize, fontWeight: fontWeight.semibold }}>
 {title}
 </Text>
 )}
@@ -98,15 +114,25 @@ autoCapitalize?: 'none' | 'sentences' | 'words';
 multiline?: boolean;
 style?: ViewStyle;
 }) {
+const { colors: c } = useTheme();
 return (
 <View style={[{ marginBottom: spacing.md }, style]}>
-{label && <Text style={styles.inputLabel}>{label}</Text>}
+{label && <Text style={{ fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: c.textSecondary, marginBottom: spacing.xs }}>{label}</Text>}
 <TextInput
-style={[styles.input, multiline && { height: 80, textAlignVertical: 'top' }]}
+style={[{
+  backgroundColor: c.surfaceSecondary,
+  borderRadius: borderRadius.md,
+  paddingHorizontal: spacing.lg,
+  paddingVertical: spacing.md,
+  fontSize: fontSize.md,
+  color: c.text,
+  borderWidth: 1,
+  borderColor: c.border,
+}, multiline && { height: 80, textAlignVertical: 'top' as const }]}
 value={value}
 onChangeText={onChangeText}
 placeholder={placeholder}
-placeholderTextColor={colors.textTertiary}
+placeholderTextColor={c.textTertiary}
 secureTextEntry={secureTextEntry}
 keyboardType={keyboardType}
 autoCapitalize={autoCapitalize}
@@ -116,9 +142,6 @@ multiline={multiline}
 );
 }
 
-/**
- * Format raw digits (max 9) into "XX XXX XX XX" display format.
- */
 function formatPhoneDigits(digits: string): string {
   const d = digits.replace(/\D/g, '').slice(0, 9);
   if (d.length <= 2) return d;
@@ -127,10 +150,6 @@ function formatPhoneDigits(digits: string): string {
   return `${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5, 7)} ${d.slice(7)}`;
 }
 
-/**
- * Phone input with fixed +998 prefix. Value is the raw digits after +998 (max 9 digits).
- * Full number returned by getFullPhone() is "+998XXXXXXXXX".
- */
 export function PhoneInput({
   label,
   value,
@@ -142,25 +161,34 @@ export function PhoneInput({
   onChangeText: (digits: string) => void;
   style?: ViewStyle;
 }) {
+  const { colors: c } = useTheme();
   const handleChange = (text: string) => {
-    // Strip everything except digits
     const digits = text.replace(/\D/g, '').slice(0, 9);
     onChangeText(digits);
   };
 
   return (
     <View style={[{ marginBottom: spacing.md }, style]}>
-      {label && <Text style={styles.inputLabel}>{label}</Text>}
-      <View style={[styles.input, { flexDirection: 'row', alignItems: 'center' }]}>
-        <Text style={{ fontSize: fontSize.md, color: colors.text, fontWeight: fontWeight.semibold, marginRight: spacing.xs }}>
+      {label && <Text style={{ fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: c.textSecondary, marginBottom: spacing.xs }}>{label}</Text>}
+      <View style={{
+        backgroundColor: c.surfaceSecondary,
+        borderRadius: borderRadius.md,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+        borderWidth: 1,
+        borderColor: c.border,
+        flexDirection: 'row',
+        alignItems: 'center',
+      }}>
+        <Text style={{ fontSize: fontSize.md, color: c.text, fontWeight: fontWeight.semibold, marginRight: spacing.xs }}>
           +998
         </Text>
         <TextInput
-          style={{ flex: 1, fontSize: fontSize.md, color: colors.text, padding: 0, margin: 0 }}
+          style={{ flex: 1, fontSize: fontSize.md, color: c.text, padding: 0, margin: 0 }}
           value={formatPhoneDigits(value)}
           onChangeText={handleChange}
           placeholder="XX XXX XX XX"
-          placeholderTextColor={colors.textTertiary}
+          placeholderTextColor={c.textTertiary}
           keyboardType="phone-pad"
           maxLength={12}
         />
@@ -169,7 +197,6 @@ export function PhoneInput({
   );
 }
 
-/** Build the full phone string from raw digits: "+998901234567" */
 export function getFullPhone(digits: string): string {
   const clean = digits.replace(/\D/g, '');
   if (clean.length !== 9) return '';
@@ -178,24 +205,31 @@ export function getFullPhone(digits: string): string {
 
 export const Badge = memo(function Badge({
 text,
-color = colors.primary,
+color: badgeColor,
 bgColor,
 }: {
 text: string;
 color?: string;
 bgColor?: string;
 }) {
+const c = badgeColor || colors.primary;
 return (
-<View style={[styles.badge, { backgroundColor: bgColor || color + '20' }]}>
-<Text style={[styles.badgeText, { color }]}>{text}</Text>
+<View style={{
+  paddingHorizontal: spacing.sm,
+  paddingVertical: spacing.xs,
+  borderRadius: borderRadius.sm,
+  alignSelf: 'flex-start' as const,
+  backgroundColor: bgColor || c + '20',
+}}>
+<Text style={{ fontSize: fontSize.xs, fontWeight: fontWeight.semibold, color: c }}>{text}</Text>
 </View>
 );
 });
 
 export const SectionTitle = memo(function SectionTitle({ title, action }: { title: string; action?: React.ReactNode }) {
 return (
-<View style={styles.sectionHeader}>
-<Text style={styles.sectionTitle}>{title}</Text>
+<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md, marginTop: spacing.lg }}>
+<Text style={{ fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.text }}>{title}</Text>
 {action}
 </View>
 );
@@ -203,33 +237,31 @@ return (
 
 export const EmptyState = memo(function EmptyState({ message, icon }: { message: string; icon?: string }) {
 return (
-<View style={styles.emptyState}>
-{icon && <Text style={styles.emptyIcon}>{icon}</Text>}
-<Text style={styles.emptyText}>{message}</Text>
+<View style={{ alignItems: 'center', paddingVertical: spacing.xxxl }}>
+{icon && <Text style={{ fontSize: 48, marginBottom: spacing.md }}>{icon}</Text>}
+<Text style={{ fontSize: fontSize.md, color: colors.textSecondary }}>{message}</Text>
 </View>
 );
 });
 
-const STATUS_CONFIG: Record<string, { color: string; bg: string }> = {
-present: { color: colors.present, bg: colors.successLight },
-absent: { color: colors.absent, bg: colors.errorLight },
-late: { color: colors.late, bg: colors.warningLight },
-excused: { color: colors.excused, bg: colors.surfaceSecondary },
-pending: { color: colors.pending, bg: colors.warningLight },
-confirmed: { color: colors.confirmed, bg: colors.successLight },
-reversed: { color: colors.reversed, bg: colors.errorLight },
-approved: { color: colors.confirmed, bg: colors.successLight },
-rejected: { color: colors.error, bg: colors.errorLight },
-payment: { color: colors.success, bg: colors.successLight },
-reversal: { color: colors.error, bg: colors.errorLight },
-active: { color: colors.success, bg: colors.successLight },
-inactive: { color: colors.textTertiary, bg: colors.surfaceSecondary },
-};
-const STATUS_CONFIG_DEFAULT = { color: colors.textSecondary, bg: colors.surfaceSecondary };
-
 export const StatusBadge = memo(function StatusBadge({ status }: { status: string }) {
-const config = STATUS_CONFIG[status] || STATUS_CONFIG_DEFAULT;
-return <Badge text={status.charAt(0).toUpperCase() + status.slice(1)} color={config.color} bgColor={config.bg} />;
+const cfg: Record<string, { color: string; bg: string }> = {
+  present: { color: colors.present, bg: colors.successLight },
+  absent: { color: colors.absent, bg: colors.errorLight },
+  late: { color: colors.late, bg: colors.warningLight },
+  excused: { color: colors.excused, bg: colors.surfaceSecondary },
+  pending: { color: colors.pending, bg: colors.warningLight },
+  confirmed: { color: colors.confirmed, bg: colors.successLight },
+  reversed: { color: colors.reversed, bg: colors.errorLight },
+  approved: { color: colors.confirmed, bg: colors.successLight },
+  rejected: { color: colors.error, bg: colors.errorLight },
+  payment: { color: colors.success, bg: colors.successLight },
+  reversal: { color: colors.error, bg: colors.errorLight },
+  active: { color: colors.success, bg: colors.successLight },
+  inactive: { color: colors.textTertiary, bg: colors.surfaceSecondary },
+};
+const c = cfg[status] || { color: colors.textSecondary, bg: colors.surfaceSecondary };
+return <Badge text={status.charAt(0).toUpperCase() + status.slice(1)} color={c.color} bgColor={c.bg} />;
 });
 
 export const ListItem = memo(function ListItem({
@@ -248,13 +280,19 @@ borderBottom?: boolean;
 const Container = onPress ? TouchableOpacity : View;
 return (
 <Container
-style={[styles.listItem, borderBottom && { borderBottomWidth: 1, borderBottomColor: colors.borderLight }]}
+style={{
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingVertical: spacing.md,
+  borderBottomWidth: borderBottom ? 1 : 0,
+  borderBottomColor: colors.borderLight,
+}}
 onPress={onPress}
 activeOpacity={0.7}
 >
 <View style={{ flex: 1 }}>
-<Text style={styles.listItemTitle}>{title}</Text>
-{subtitle && <Text style={styles.listItemSubtitle}>{subtitle}</Text>}
+<Text style={{ fontSize: fontSize.md, fontWeight: fontWeight.medium, color: colors.text }}>{title}</Text>
+{subtitle && <Text style={{ fontSize: fontSize.sm, color: colors.textSecondary, marginTop: 2 }}>{subtitle}</Text>}
 </View>
 {right}
 </Container>
@@ -264,7 +302,7 @@ activeOpacity={0.7}
 export const StatCard = memo(function StatCard({
 title,
 value,
-color: statColor = colors.primary,
+color: statColor,
 subtitle,
 }: {
 title: string;
@@ -274,123 +312,17 @@ subtitle?: string;
 }) {
 return (
 <Card style={{ flex: 1, marginHorizontal: spacing.xs }}>
-<Text style={styles.statTitle}>{title}</Text>
-<Text style={[styles.statValue, { color: statColor }]}>{value}</Text>
-{subtitle && <Text style={styles.statSubtitle}>{subtitle}</Text>}
+<Text style={{ fontSize: fontSize.xs, color: colors.textSecondary, fontWeight: fontWeight.medium, marginBottom: spacing.xs }}>{title}</Text>
+<Text style={{ fontSize: fontSize.xxl, fontWeight: fontWeight.bold, color: statColor || colors.primary }}>{value}</Text>
+{subtitle && <Text style={{ fontSize: fontSize.xs, color: colors.textTertiary, marginTop: spacing.xs }}>{subtitle}</Text>}
 </Card>
 );
 });
 
 export const ScreenLoader = memo(function ScreenLoader() {
 return (
-<View style={styles.loader}>
+<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
 <ActivityIndicator size="large" color={colors.primary} />
 </View>
 );
-});
-
-const styles = StyleSheet.create({
-card: {
-backgroundColor: colors.surface,
-borderRadius: borderRadius.lg,
-padding: spacing.lg,
-marginBottom: spacing.md,
-boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.05)',
-elevation: 1,
-},
-button: {
-borderRadius: borderRadius.md,
-alignItems: 'center',
-justifyContent: 'center',
-paddingHorizontal: spacing.xl,
-},
-buttonText: {
-fontWeight: fontWeight.semibold,
-},
-input: {
-backgroundColor: colors.surfaceSecondary,
-borderRadius: borderRadius.md,
-paddingHorizontal: spacing.lg,
-paddingVertical: spacing.md,
-fontSize: fontSize.md,
-color: colors.text,
-borderWidth: 1,
-borderColor: colors.border,
-},
-inputLabel: {
-fontSize: fontSize.sm,
-fontWeight: fontWeight.medium,
-color: colors.textSecondary,
-marginBottom: spacing.xs,
-},
-badge: {
-paddingHorizontal: spacing.sm,
-paddingVertical: spacing.xs,
-borderRadius: borderRadius.sm,
-alignSelf: 'flex-start',
-},
-badgeText: {
-fontSize: fontSize.xs,
-fontWeight: fontWeight.semibold,
-},
-sectionHeader: {
-flexDirection: 'row',
-justifyContent: 'space-between',
-alignItems: 'center',
-marginBottom: spacing.md,
-marginTop: spacing.lg,
-},
-sectionTitle: {
-fontSize: fontSize.lg,
-fontWeight: fontWeight.bold,
-color: colors.text,
-},
-emptyState: {
-alignItems: 'center',
-paddingVertical: spacing.xxxl,
-},
-emptyIcon: {
-fontSize: 48,
-marginBottom: spacing.md,
-},
-emptyText: {
-fontSize: fontSize.md,
-color: colors.textSecondary,
-},
-listItem: {
-flexDirection: 'row',
-alignItems: 'center',
-paddingVertical: spacing.md,
-},
-listItemTitle: {
-fontSize: fontSize.md,
-fontWeight: fontWeight.medium,
-color: colors.text,
-},
-listItemSubtitle: {
-fontSize: fontSize.sm,
-color: colors.textSecondary,
-marginTop: 2,
-},
-statTitle: {
-fontSize: fontSize.xs,
-color: colors.textSecondary,
-fontWeight: fontWeight.medium,
-marginBottom: spacing.xs,
-},
-statValue: {
-fontSize: fontSize.xxl,
-fontWeight: fontWeight.bold,
-},
-statSubtitle: {
-fontSize: fontSize.xs,
-color: colors.textTertiary,
-marginTop: spacing.xs,
-},
-loader: {
-flex: 1,
-justifyContent: 'center',
-alignItems: 'center',
-backgroundColor: colors.background,
-},
 });

@@ -15,6 +15,8 @@ type SortOption = 'debt' | 'name' | 'sessions';
 const PAGE_SIZE = 20;
 
 export default function DebtorsScreen({ navigation }: any) {
+const styles = getStyles();
+
   const me = useQuery(api.users.me);
   const debtors = useQuery(api.transactions.getDebtors);
   const sendReminder = useAction(api.telegramActions.sendPaymentReminderPublic);
@@ -180,7 +182,7 @@ export default function DebtorsScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
   backBtn: { fontSize: fontSize.md, color: colors.primary, fontWeight: fontWeight.medium },
@@ -214,4 +216,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+}); }

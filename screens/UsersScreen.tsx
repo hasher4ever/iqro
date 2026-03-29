@@ -47,6 +47,8 @@ const ALL_ROLES = [
 ] as const;
 
 export default function UsersScreen({ navigation }: any) {
+const styles = getStyles();
+
 const me = useQuery(api.users.me);
 const [filterRole, setFilterRole] = useState<string>('');
 const [searchText, setSearchText] = useState('');
@@ -576,7 +578,7 @@ onPress={() => setCreateForm((p: typeof createForm) => ({ ...p, role: r.value })
 );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
 container: { flex: 1, backgroundColor: colors.background },
 
 // Filters
@@ -800,6 +802,6 @@ color: colors.textSecondary,
 idToggleTextActive: {
 color: colors.textInverse,
 },
-});
+}); }
 
 // ... existing code ...

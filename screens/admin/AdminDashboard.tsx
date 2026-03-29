@@ -12,6 +12,8 @@ import { NotificationBell } from '../../components/NotificationBell';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function AdminDashboard({ navigation }: any) {
+const styles = getStyles();
+
 const me = useQuery(api.users.me);
 const centerFinancials = useQuery(api.transactions.getCenterFinancials);
 const pendingCount = useQuery(api.transactions.getPendingCount);
@@ -231,7 +233,7 @@ style={[styles.classItem, i < todayClasses.length - 1 && styles.classItemBorder]
 }
 
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
 container: { flex: 1, backgroundColor: colors.background },
 content: { padding: spacing.lg, paddingBottom: 100 },
 headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: spacing.lg },
@@ -272,4 +274,4 @@ approveBtn: { backgroundColor: colors.successLight, borderRadius: borderRadius.s
 approveBtnText: { fontSize: fontSize.sm, color: colors.success, fontWeight: fontWeight.semibold },
 rejectBtn: { backgroundColor: colors.errorLight, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
 rejectBtnText: { fontSize: fontSize.sm, color: colors.error, fontWeight: fontWeight.semibold },
-});
+}); }

@@ -16,6 +16,8 @@ const PAGE_SIZE = 4;
 type ScheduleEntry = { days: string[]; startTime: string; endTime: string };
 
 export default function ClassesScreen({ navigation }: any) {
+const styles = getStyles();
+
 const me = useQuery(api.users.me);
 const classes = useQuery(api.classes.list);
 const rooms = useQuery(api.rooms.list);
@@ -517,7 +519,7 @@ activeOpacity={0.6}
 );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
 container: { flex: 1, backgroundColor: colors.background },
 header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
 headerTitle: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: colors.text },
@@ -598,6 +600,6 @@ toggleTrack: { width: 48, height: 28, borderRadius: 14, backgroundColor: colors.
 toggleTrackActive: { backgroundColor: colors.primary },
 toggleThumb: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.surface },
 toggleThumbActive: { alignSelf: 'flex-end' as const },
-});
+}); }
 
 // ... existing code ...

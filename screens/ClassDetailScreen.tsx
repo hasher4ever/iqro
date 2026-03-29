@@ -11,6 +11,8 @@ import { ScreenHeader } from '../components/ScreenHeader';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function ClassDetailScreen({ route, navigation }: any) {
+const styles = getStyles();
+
 const { classId, className } = route.params;
 const me = useQuery(api.users.me);
 const classData = useQuery(api.classes.getById, { classId });
@@ -273,7 +275,7 @@ loading={adding === s._id}
 );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
 container: { flex: 1, backgroundColor: colors.background },
 header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
 backBtn: { fontSize: fontSize.md, color: colors.primary, fontWeight: fontWeight.medium },
@@ -316,4 +318,4 @@ terminateBtn: { paddingVertical: spacing.md, paddingHorizontal: spacing.lg, bord
 terminateBtnDanger: { borderColor: colors.error, backgroundColor: colors.errorLight },
 terminateBtnSuccess: { borderColor: colors.success, backgroundColor: colors.successLight },
 terminateBtnText: { fontSize: fontSize.md, fontWeight: fontWeight.semibold },
-});
+}); }

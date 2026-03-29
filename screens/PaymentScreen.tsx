@@ -11,6 +11,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScreenHeader } from '../components/ScreenHeader';
 
 export default function PaymentScreen({ route, navigation }: any) {
+const styles = getStyles();
+
 const { classId, className } = route.params;
 const students = useQuery(api.classes.getClassStudents, { classId });
 const recordPayment = useMutation(api.transactions.recordPayment);
@@ -104,6 +106,7 @@ loading={saving}
 }
 
 function StudentPaymentRow({ student, classId, selected, onSelect }: any) {
+const styles = getStyles();
 const balance = useQuery(api.transactions.getStudentClassBalance, {
 classId,
 studentId: student._id,
@@ -136,7 +139,7 @@ activeOpacity={0.7}
 );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
 container: { flex: 1, backgroundColor: colors.background },
 header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
 backBtn: { fontSize: fontSize.md, color: colors.primary, fontWeight: fontWeight.medium },
@@ -151,5 +154,4 @@ balanceText: { fontSize: fontSize.sm, marginTop: 2 },
 radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: colors.border },
 radioActive: { borderColor: colors.primary, backgroundColor: colors.primary },
 detailText: { fontSize: fontSize.xs, color: colors.textTertiary, marginTop: 2 },
-}
-);
+}); }

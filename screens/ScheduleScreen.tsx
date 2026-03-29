@@ -93,6 +93,8 @@ const DAY_COL_WIDTH = (screenWidth - TIME_COL_WIDTH - spacing.md * 2) / 7;
 const HOUR_HEIGHT = 64;
 
 export default function ScheduleScreen({ navigation }: any) {
+const styles = getStyles();
+
   const schedule = useQuery(api.rooms.getFullSchedule);
   const rooms = useQuery(api.rooms.list);
 
@@ -421,7 +423,7 @@ export default function ScheduleScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   title: {
     fontSize: fontSize.xl,
@@ -622,4 +624,4 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.semibold,
     color: colors.textSecondary,
   },
-});
+}); }

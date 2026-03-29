@@ -12,6 +12,8 @@ import { ScreenHeader } from '../components/ScreenHeader';
 const PAGE_SIZE = 20;
 
 export default function AuditLogsScreen({ navigation }: any) {
+const styles = getStyles();
+
 const me = useQuery(api.users.me);
 const logs = useQuery(api.auditLogs.list, {});
 const [searchText, setSearchText] = useState('');
@@ -124,7 +126,7 @@ filtered.slice(0, visibleCount).map((log: any) => (
 );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
 container: { flex: 1, backgroundColor: colors.background },
 header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
 backBtn: { fontSize: fontSize.md, color: colors.primary, fontWeight: fontWeight.medium },
@@ -144,5 +146,5 @@ logAction: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: colo
 logMeta: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: 2 },
 logDetails: { fontSize: fontSize.xs, color: colors.textTertiary, marginTop: 4, fontFamily: 'monospace' },
 logTime: { fontSize: fontSize.xs, color: colors.textTertiary, marginTop: 4 },
-});
+}); }
 

@@ -10,6 +10,8 @@ import { Button } from '../components/UI';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function NoRoleScreen() {
+const styles = getStyles();
+
   const { signOut } = useAuthActions();
   const company = useQuery(api.companies.myCompany);
 
@@ -37,7 +39,7 @@ export default function NoRoleScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
   iconCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.warningLight, justifyContent: 'center', alignItems: 'center', marginBottom: spacing.lg },
@@ -50,4 +52,4 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
   },
   infoText: { fontSize: fontSize.sm, color: colors.textSecondary },
-});
+}); }

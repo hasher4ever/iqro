@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { useAuthActions } from '@convex-dev/auth/react';
 import { api } from '../convex/_generated/api';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
+import { colors, spacing, fontSize, fontWeight, borderRadius, useTheme, ThemeMode } from '../lib/theme';
 import { t, setLanguage, getLanguage, LANGUAGES, getLanguageLabel, Language } from '../lib/i18n';
 import { Card, Button, Input, ScreenLoader, SectionTitle, ListItem } from '../components/UI';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -14,6 +14,9 @@ import * as Linking from 'expo-linking';
 import { BUILD_INFO } from '../lib/buildInfo';
 
 export default function ProfileScreen({ navigation }: any) {
+const styles = getStyles();
+  const { mode: themeMode, setMode: setThemeMode } = useTheme();
+
   const { signOut } = useAuthActions();
   const me = useQuery(api.users.me);
   const company = useQuery(api.companies.myCompany);
@@ -422,6 +425,28 @@ export default function ProfileScreen({ navigation }: any) {
           );
         })()}
 
+        {/* Theme */}
+        <SectionTitle title={t('theme')} />
+        <Card>
+          {(['light', 'dark', 'system'] as ThemeMode[]).map((m) => {
+            const labels: Record<ThemeMode, string> = { light: t('light'), dark: t('dark'), system: t('system') };
+            const icons: Record<ThemeMode, string> = { light: 'sunny-outline', dark: 'moon-outline', system: 'phone-portrait-outline' };
+            return (
+              <TouchableOpacity
+                key={m}
+                style={[styles.langOption, themeMode === m && styles.langOptionActive]}
+                onPress={() => setThemeMode(m)}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                  <Ionicons name={icons[m] as any} size={16} color={themeMode === m ? colors.primary : colors.textSecondary} />
+                  <Text style={[styles.langText, themeMode === m && styles.langTextActive]}>{labels[m]}</Text>
+                </View>
+                {themeMode === m && <View style={styles.checkmark} />}
+              </TouchableOpacity>
+            );
+          })}
+        </Card>
+
         {/* Language — at the end */}
         <SectionTitle title={t('language')} />
         <Card>
@@ -447,7 +472,7 @@ export default function ProfileScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center' },
   content: { padding: spacing.lg, paddingBottom: 100 },
@@ -802,4 +827,4 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
     marginBottom: spacing.md,
   },
-});
+}); }

@@ -13,6 +13,8 @@ import { ScreenHeader } from '../components/ScreenHeader';
 const PAGE_SIZE = 20;
 
 export default function TransactionsScreen({ navigation }: any) {
+const styles = getStyles();
+
   const [filter, setFilter] = useState<string | undefined>(undefined);
   const [searchText, setSearchText] = useState('');
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -201,7 +203,7 @@ function formatDate(ts: number): string {
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-const styles = StyleSheet.create({
+function getStyles() { return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   filterRow: { flexDirection: 'row', paddingHorizontal: spacing.lg, gap: spacing.sm, marginBottom: spacing.md },
   filterBtn: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: borderRadius.full, backgroundColor: colors.surfaceSecondary },
@@ -283,4 +285,4 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     fontWeight: fontWeight.medium,
   },
-});
+}); }
