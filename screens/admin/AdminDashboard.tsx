@@ -46,7 +46,7 @@ return (
   </View>
   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
     <NotificationBell />
-    <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+    <TouchableOpacity onPress={() => navigation.navigate('Profile')} accessibilityLabel={t('profile')} accessibilityRole="button">
       <Ionicons name="person-circle-outline" size={32} color={colors.text} />
     </TouchableOpacity>
   </View>
@@ -203,7 +203,7 @@ action={
 {/* Today's Classes */}
 <SectionTitle title={t('todays_classes')} />
 {todayClasses.length === 0 ? (
-<EmptyState message={t('no_classes_today')} />
+<EmptyState message={t('no_classes_today')} icon="📅" />
 ) : (
 <Card>
 {todayClasses.map((c, i) => (

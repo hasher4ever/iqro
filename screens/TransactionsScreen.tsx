@@ -86,12 +86,14 @@ const styles = getStyles();
         />
       </View>
 
-      <View style={styles.filterRow}>
+      <View style={styles.filterRow} accessibilityRole="radiogroup" accessibilityLabel={t('filter')}>
         {filters.map((f) => (
           <TouchableOpacity
             key={f.label}
             style={[styles.filterBtn, filter === f.value && styles.filterBtnActive]}
             onPress={() => setFilter(f.value)}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: filter === f.value }}
           >
             <Text style={[styles.filterText, filter === f.value && styles.filterTextActive]}>
               {f.label}
@@ -102,7 +104,7 @@ const styles = getStyles();
 
       <ScrollView contentContainerStyle={styles.content}>
         {filteredTx.length === 0 ? (
-          <EmptyState message={t('no_results')} />
+          <EmptyState message={t('no_results')} icon="💳" />
         ) : (
           filteredTx.slice(0, visibleCount).map((tx: any) => {
             const isLoading = loadingId !== null;

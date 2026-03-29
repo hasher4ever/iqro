@@ -120,13 +120,15 @@ const styles = getStyles();
         title={t('profile')}
         onBack={() => navigation.goBack()}
         rightAction={
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={handleSignOut}
             style={[styles.signOutBtn, confirmLogout && styles.signOutBtnConfirm]}
+            accessibilityLabel={t('logout')}
+            accessibilityRole="button"
           >
-            <Ionicons 
-              name="log-out" 
-              size={20} 
+            <Ionicons
+              name="log-out"
+              size={20}
               color={confirmLogout ? colors.background : colors.error}
             />
           </TouchableOpacity>
@@ -247,6 +249,8 @@ const styles = getStyles();
                         try { await regenerateCode(); }
                         catch (e: any) { showAlert(t('error'), e.message); }
                       }}
+                      accessibilityLabel={t('regenerate_code')}
+                      accessibilityRole="button"
                     >
                       <Ionicons name="refresh" size={16} color={colors.primary} />
                     </TouchableOpacity>
@@ -543,8 +547,7 @@ function getStyles() { return StyleSheet.create({
     fontSize: fontSize.xs,
     fontWeight: fontWeight.semibold,
     color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
     marginBottom: spacing.xs,
   },
   nameRow: {

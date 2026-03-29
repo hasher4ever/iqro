@@ -92,7 +92,7 @@ return (
   title={t('manage_rooms')}
   onBack={() => navigation.goBack()}
   rightAction={
-    <TouchableOpacity onPress={openCreate}>
+    <TouchableOpacity onPress={openCreate} accessibilityLabel={t('add_room')} accessibilityRole="button">
       <Ionicons name="add-circle-outline" size={26} color={colors.primary} />
     </TouchableOpacity>
   }
@@ -100,7 +100,7 @@ return (
 
 <ScrollView contentContainerStyle={styles.content}>
 {rooms.length === 0 ? (
-<EmptyState message={t('no_data')} />
+<EmptyState message={t('no_data')} icon="🏫" />
 ) : (
 rooms.map((room: any) => (
 <RoomCard

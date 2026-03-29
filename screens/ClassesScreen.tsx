@@ -187,7 +187,7 @@ return (
   title={t('classes')}
   onBack={() => navigation.goBack()}
   rightAction={isAdmin ? (
-    <TouchableOpacity onPress={() => setShowCreate(true)}>
+    <TouchableOpacity onPress={() => setShowCreate(true)} accessibilityLabel={t('create_class')} accessibilityRole="button">
       <Ionicons name="add-circle-outline" size={26} color={colors.primary} />
     </TouchableOpacity>
   ) : undefined}
@@ -205,12 +205,14 @@ style={styles.searchInput}
 </View>
 
 {/* Status filter */}
-<View style={styles.filterRow}>
+<View style={styles.filterRow} accessibilityRole="radiogroup" accessibilityLabel={t('filter')}>
 {(['active', 'all', 'terminated'] as const).map((s) => (
 <TouchableOpacity
 key={s}
 style={[styles.filterChip, statusFilter === s && styles.filterChipActive]}
 onPress={() => { setStatusFilter(s); setPage(0); }}
+accessibilityRole="radio"
+accessibilityState={{ checked: statusFilter === s }}
 >
 <Text style={[styles.filterChipText, statusFilter === s && { color: colors.textInverse }]}>
 {s === 'active' ? t('active') : s === 'terminated' ? t('terminated') : t('all')}
@@ -218,13 +220,13 @@ onPress={() => { setStatusFilter(s); setPage(0); }}
 </TouchableOpacity>
 ))}
 <View style={{ flex: 1 }} />
-<Text style={styles.countText}>{filteredClasses.length} {t('classes').toLowerCase()}</Text>
+<Text style={styles.countText}>{filteredClasses.length}</Text>
 </View>
 
 {/* Course list */}
 <ScrollView style={styles.content}>
 {pagedClasses.length === 0 ? (
-<EmptyState message={t('no_data')} />
+<EmptyState message={t('no_data')} icon="📚" />
 ) : (
 pagedClasses.map((cls: any) => (
 <View key={cls._id}>
@@ -557,7 +559,7 @@ pageNumTextActive: { color: colors.textInverse, fontWeight: fontWeight.bold },
 errorText: { color: colors.error, fontSize: fontSize.sm, marginBottom: spacing.md, backgroundColor: colors.errorLight, padding: spacing.md, borderRadius: borderRadius.md },
 // Modal styles
 modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-start', paddingTop: 40 },
-modal: { backgroundColor: colors.surface, borderBottomLeftRadius: borderRadius.xl, borderBottomRightRadius: borderRadius.xl, padding: spacing.xl, maxHeight: '90%' },
+modal: { backgroundColor: colors.surface, borderBottomLeftRadius: borderRadius.xl, borderBottomRightRadius: borderRadius.xl, padding: spacing.xl, maxHeight: '90%', paddingBottom: 80 },
 modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: spacing.md },
 modalTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.text },
 modalCancelText: { fontSize: fontSize.md, color: colors.textSecondary, fontWeight: fontWeight.medium },

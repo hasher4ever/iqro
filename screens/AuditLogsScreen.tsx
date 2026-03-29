@@ -6,6 +6,7 @@ import { api } from '../convex/_generated/api';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import { t } from '../lib/i18n';
 import { ScreenLoader, EmptyState } from '../components/UI';
+import { formatTimestamp } from '../lib/utils';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScreenHeader } from '../components/ScreenHeader';
 
@@ -70,10 +71,12 @@ style={styles.searchInput}
 </View>
 
 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll} contentContainerStyle={styles.filterContent}>
-<View style={styles.chipContainer}>
+<View style={styles.chipContainer} accessibilityRole="radiogroup" accessibilityLabel={t('filter')}>
 <TouchableOpacity
 style={[styles.chip, !actionFilter && styles.chipActive]}
 onPress={() => setActionFilter('')}
+accessibilityRole="radio"
+accessibilityState={{ checked: !actionFilter }}
 >
 <Text style={[styles.chipText, !actionFilter && styles.chipTextActive]}>{t('all')}</Text>
 </TouchableOpacity>
@@ -82,6 +85,8 @@ onPress={() => setActionFilter('')}
 key={action}
 style={[styles.chip, actionFilter === action && styles.chipActive]}
 onPress={() => setActionFilter(action)}
+accessibilityRole="radio"
+accessibilityState={{ checked: actionFilter === action }}
 >
 <Text style={[styles.chipText, actionFilter === action && styles.chipTextActive]}>
 {action.replace(/_/g, ' ')}
@@ -93,7 +98,7 @@ onPress={() => setActionFilter(action)}
 
 <ScrollView contentContainerStyle={styles.content}>
 {filtered.length === 0 ? (
-<EmptyState message={t('no_data')} />
+<EmptyState message={t('no_data')} icon="📋" />
 ) : (
 filtered.slice(0, visibleCount).map((log: any, index: number) => (
 <View key={log._id} style={styles.logCard}>
@@ -101,7 +106,7 @@ filtered.slice(0, visibleCount).map((log: any, index: number) => (
 <View style={styles.actionBadge}>
 <Text style={styles.actionBadgeText}>{log.action.replace(/_/g, ' ')}</Text>
 </View>
-<Text style={styles.logTime}>{new Date(log.timestamp).toLocaleString()}</Text>
+<Text style={styles.logTime}>{formatTimestamp(log.timestamp)}</Text>
 </View>
 <View style={styles.logBody}>
 <View style={styles.logMetaRow}>

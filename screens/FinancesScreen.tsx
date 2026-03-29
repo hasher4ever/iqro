@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal } from 'react-native';
-import { showAlert } from '../lib/utils';
+import { showAlert, formatDate } from '../lib/utils';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import { t } from '../lib/i18n';
-import { ScreenLoader } from '../components/UI';
+import { ScreenLoader, EmptyState } from '../components/UI';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ScreenHeader } from '../components/ScreenHeader';
 
 type Period = 'day' | 'week' | 'month';
 
 function fmtFull(amount: number): string {
-return new Intl.NumberFormat('en-US').format(Math.round(amount));
+return new Intl.NumberFormat('uz-UZ').format(Math.round(amount)) + ' UZS';
 }
 
 export default function FinancesScreen({ navigation }: any) {
@@ -80,12 +80,14 @@ return (
 <ScreenHeader title={t('finances')} onBack={() => navigation.goBack()} />
 
 {/* Period Selector */}
-<View style={styles.periodRow}>
+<View style={styles.periodRow} accessibilityRole="radiogroup" accessibilityLabel={t('period')}>
 {(['day', 'week', 'month'] as Period[]).map((p) => (
 <TouchableOpacity
 key={p}
 style={[styles.periodBtn, period === p && styles.periodBtnActive]}
 onPress={() => setPeriod(p)}
+accessibilityRole="radio"
+accessibilityState={{ checked: period === p }}
 >
 <Text style={[styles.periodText, period === p && styles.periodTextActive]}>
 {p === 'day' ? t('fin_day') : p === 'week' ? t('fin_week') : t('fin_month')}
@@ -93,7 +95,11 @@ onPress={() => setPeriod(p)}
 </TouchableOpacity>
 ))}
 </View>
-<Text style={styles.dateRange}>{financials.startDate} — {financials.endDate}</Text>
+<Text style={styles.dateRange}>
+{financials.startDate === financials.endDate
+  ? formatDate(financials.startDate)
+  : `${formatDate(financials.startDate)} — ${formatDate(financials.endDate)}`}
+</Text>
 
 <ScrollView contentContainerStyle={styles.scroll}>
 
@@ -151,7 +157,7 @@ onPress={() => setPeriod(p)}
 
 {/* ========== SECTION 2: TEACHERS ========== */}
 <Text style={styles.sectionTitle}>
-<Ionicons name="people-outline" size={16} color={colors.primary} />  {t('teachers')}
+<Ionicons name="people-outline" size={16} color={colors.primary} />  {t('fin_teacher_share')}
 </Text>
 
 {/* Summary: 3 numbers */}
@@ -260,9 +266,7 @@ setPayModalVisible(true);
 })}
 
 {financials.teacherBreakdown.length === 0 && (
-<View style={styles.card}>
-<Text style={styles.emptyText}>{t('no_data')}</Text>
-</View>
+<EmptyState message={t('no_data')} icon="💰" />
 )}
 
 <View style={{ height: 40 }} />

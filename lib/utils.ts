@@ -50,3 +50,26 @@ export function formatMoney(amount: number): string {
   const sign = amount < 0 ? '-' : '';
   return `${sign}${formatted} UZS`;
 }
+
+/**
+ * Format an ISO date string (YYYY-MM-DD) to DD.MM.YYYY.
+ */
+export function formatDate(isoDate: string): string {
+  if (!isoDate || isoDate.length < 10) return isoDate;
+  const [y, m, d] = isoDate.split('-');
+  return `${d}.${m}.${y}`;
+}
+
+/**
+ * Format a timestamp (number or ISO string) to DD.MM.YYYY, HH:MM.
+ */
+export function formatTimestamp(ts: number | string): string {
+  const date = typeof ts === 'number' ? new Date(ts) : new Date(ts);
+  const tashkent = toTashkentDate(date);
+  const d = String(tashkent.getUTCDate()).padStart(2, '0');
+  const m = String(tashkent.getUTCMonth() + 1).padStart(2, '0');
+  const y = tashkent.getUTCFullYear();
+  const h = String(tashkent.getUTCHours()).padStart(2, '0');
+  const min = String(tashkent.getUTCMinutes()).padStart(2, '0');
+  return `${d}.${m}.${y}, ${h}:${min}`;
+}

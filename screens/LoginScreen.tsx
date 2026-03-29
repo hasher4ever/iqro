@@ -43,7 +43,7 @@ const styles = getStyles();
     setError('');
     const hasIdentifier = loginType === 'email' ? !!email.trim() : phoneDigits.length === 9;
     if (!hasIdentifier || !password) {
-      setError(t('error') + ': ' + t('fill_all_fields'));
+      setError(t('fill_all_fields'));
       return;
     }
     setLoading(true);
@@ -130,7 +130,7 @@ const styles = getStyles();
               <Text style={styles.logoText}>IQ</Text>
             </View>
             <Text style={styles.appName}>{t('app_name')}</Text>
-            <Text style={styles.appSubtitle}>Learning Center ERP</Text>
+            <Text style={styles.appSubtitle}>{t('learning_center_erp')}</Text>
           </View>
 
           {/* Form */}
@@ -152,10 +152,12 @@ const styles = getStyles();
             )}
 
             {/* Email / Phone toggle */}
-            <View style={styles.toggleRow}>
+            <View style={styles.toggleRow} accessibilityRole="radiogroup">
               <TouchableOpacity
                 style={[styles.toggleBtn, loginType === 'phone' && styles.toggleBtnActive]}
                 onPress={() => { setLoginType('phone'); setEmail(''); }}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: loginType === 'phone' }}
               >
                 <Text style={[styles.toggleText, loginType === 'phone' && styles.toggleTextActive]}>
                   {t('phone')}
@@ -164,6 +166,8 @@ const styles = getStyles();
               <TouchableOpacity
                 style={[styles.toggleBtn, loginType === 'email' && styles.toggleBtnActive]}
                 onPress={() => { setLoginType('email'); setPhoneDigits(''); }}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: loginType === 'email' }}
               >
                 <Text style={[styles.toggleText, loginType === 'email' && styles.toggleTextActive]}>
                   {t('email')}

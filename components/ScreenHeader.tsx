@@ -14,7 +14,7 @@ useTheme(); // subscribe to theme changes
 const styles = getStyles();
 return (
 <View style={styles.header}>
-<TouchableOpacity onPress={onBack} style={styles.backBtn}>
+<TouchableOpacity onPress={onBack} style={styles.backBtn} accessibilityLabel={title ? `Back from ${title}` : 'Back'} accessibilityRole="button">
 <Ionicons name="chevron-back" size={28} color={colors.primary} />
 </TouchableOpacity>
 <Text style={styles.title} numberOfLines={1}>{title}</Text>

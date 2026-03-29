@@ -16,6 +16,8 @@ return (
 <TouchableOpacity
 style={styles.container}
 onPress={() => navigation.navigate('Notifications')}
+accessibilityLabel={unreadCount ? `Notifications, ${unreadCount} unread` : 'Notifications'}
+accessibilityRole="button"
 >
 <Ionicons name="notifications-outline" size={24} color={colors.text} />
 {unreadCount !== undefined && unreadCount > 0 && (

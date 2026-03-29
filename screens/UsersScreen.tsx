@@ -25,12 +25,15 @@ teacher: 'T',
 student_parent: 'S',
 };
 
-const ROLE_LABELS: Record<string, string> = {
-super_admin: 'Super Admin',
-admin: 'Admin',
-teacher: 'Teacher',
-student_parent: 'Student/Parent',
-};
+function getRoleLabel(role: string): string {
+  const map: Record<string, string> = {
+    super_admin: t('super_admin'),
+    admin: t('admin'),
+    teacher: t('teacher'),
+    student_parent: t('student_parent'),
+  };
+  return map[role] || role;
+}
 
 const ROLE_COLOR: Record<string, string> = {
 super_admin: colors.error,
@@ -39,12 +42,7 @@ teacher: colors.primary,
 student_parent: colors.info || colors.textSecondary,
 };
 
-const ALL_ROLES = [
-{ label: 'Super Admin', value: 'super_admin' },
-{ label: 'Admin', value: 'admin' },
-{ label: 'Teacher', value: 'teacher' },
-{ label: 'Student/Parent', value: 'student_parent' },
-] as const;
+const ALL_ROLE_VALUES = ['super_admin', 'admin', 'teacher', 'student_parent'] as const;
 
 export default function UsersScreen({ navigation }: any) {
 const styles = getStyles();
@@ -57,7 +55,7 @@ const [showFilters, setShowFilters] = useState(false);
 const [showArchived, setShowArchived] = useState(false);
 
 const users = useQuery(api.users.listUsers, {
-role: filterRole || undefined,
+role: (filterRole || undefined) as any,
 search: searchText || undefined,
 sortBy,
 showArchived,
@@ -99,8 +97,8 @@ if (me && me.role !== 'admin' && me.role !== 'super_admin') {
 
 const myLevel = ROLE_LEVEL[me?.role || ''] || 0;
 
-const assignableRoles = ALL_ROLES.filter((r) => {
-const rLevel = ROLE_LEVEL[r.value] || 0;
+const assignableRoles = ALL_ROLE_VALUES.filter((r) => {
+const rLevel = ROLE_LEVEL[r] || 0;
 if (me?.role === 'super_admin') return rLevel !== 4;
 return rLevel < myLevel;
 });
@@ -217,10 +215,10 @@ title={t('manage_users')}
 onBack={() => navigation.goBack()}
 rightAction={
 <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-<TouchableOpacity onPress={() => setShowCreateModal(true)}>
+<TouchableOpacity onPress={() => setShowCreateModal(true)} accessibilityLabel={t('add_user')} accessibilityRole="button">
 <Ionicons name="person-add-outline" size={22} color={colors.primary} />
 </TouchableOpacity>
-<TouchableOpacity onPress={() => setShowFilters(!showFilters)}>
+<TouchableOpacity onPress={() => setShowFilters(!showFilters)} accessibilityLabel={t('filter')} accessibilityRole="button">
 <Ionicons name={showFilters ? 'filter' : 'filter-outline'} size={22} color={colors.primary} />
 </TouchableOpacity>
 </View>
@@ -245,21 +243,25 @@ style={styles.searchInputText}
 )}
 </View>
 
-<View style={styles.filterRow}>
+<View style={styles.filterRow} accessibilityRole="radiogroup" accessibilityLabel={t('set_role')}>
 <TouchableOpacity
 style={[styles.filterChip, filterRole === '' && styles.filterChipActive]}
 onPress={() => setFilterRole('')}
+accessibilityRole="radio"
+accessibilityState={{ checked: filterRole === '' }}
 >
 <Text style={[styles.filterChipText, filterRole === '' && styles.filterChipTextActive]}>{t('all')}</Text>
 </TouchableOpacity>
-{ALL_ROLES.map((role) => (
+{ALL_ROLE_VALUES.map((rv) => (
 <TouchableOpacity
-key={role.value}
-style={[styles.filterChip, filterRole === role.value && styles.filterChipActive]}
-onPress={() => setFilterRole(role.value)}
+key={rv}
+style={[styles.filterChip, filterRole === rv && styles.filterChipActive]}
+onPress={() => setFilterRole(rv)}
+accessibilityRole="radio"
+accessibilityState={{ checked: filterRole === rv }}
 >
-<Text style={[styles.filterChipText, filterRole === role.value && styles.filterChipTextActive]}>
-{ROLE_SHORT[role.value]}
+<Text style={[styles.filterChipText, filterRole === rv && styles.filterChipTextActive]}>
+{ROLE_SHORT[rv]}
 </Text>
 </TouchableOpacity>
 ))}
@@ -273,7 +275,7 @@ style={[styles.filterChip, sortBy === s && styles.filterChipActive]}
 onPress={() => setSortBy(s)}
 >
 <Text style={[styles.filterChipText, sortBy === s && styles.filterChipTextActive]}>
-{s === 'name' ? t('name') : s === 'date' ? 'Date' : t('role')}
+{s === 'name' ? t('name') : s === 'date' ? t('date') : t('role')}
 </Text>
 </TouchableOpacity>
 ))}
@@ -323,7 +325,7 @@ onPress={() => setShowArchived(true)}
 )}
 
 {users.length === 0 ? (
-<EmptyState message={t('no_results')} />
+<EmptyState message={t('no_results')} icon="👥" />
 ) : (
 users.map((user: any) => {
 const canManage = me?.role === 'super_admin' || (ROLE_LEVEL[user.role || ''] || 0) < myLevel;
@@ -409,18 +411,20 @@ onPress={() => {
 
 {/* Role */}
 <Text style={styles.fieldLabel}>{t('role')}</Text>
-<View style={styles.roleChipsRow}>
+<View style={styles.roleChipsRow} accessibilityRole="radiogroup" accessibilityLabel={t('role')}>
 {assignableRoles.map((r) => {
-const rc = ROLE_COLOR[r.value] || colors.textSecondary;
-const selected = editRole === r.value;
+const rc = ROLE_COLOR[r] || colors.textSecondary;
+const selected = editRole === r;
 return (
 <TouchableOpacity
-key={r.value}
+key={r}
 style={[styles.roleChip, selected && { backgroundColor: rc + '20', borderColor: rc }]}
-onPress={() => setEditRole(r.value)}
+onPress={() => setEditRole(r)}
+accessibilityRole="radio"
+accessibilityState={{ checked: selected }}
 >
 <Text style={[styles.roleChipText, selected && { color: rc, fontWeight: fontWeight.semibold }]}>
-{r.label}
+{getRoleLabel(r)}
 </Text>
 </TouchableOpacity>
 );
@@ -553,18 +557,20 @@ secureTextEntry
 />
 
 <Text style={styles.fieldLabel}>{t('role')}</Text>
-<View style={styles.roleChipsRow}>
+<View style={styles.roleChipsRow} accessibilityRole="radiogroup" accessibilityLabel={t('role')}>
 {assignableRoles.map((r) => {
-const rc = ROLE_COLOR[r.value] || colors.textSecondary;
-const selected = createForm.role === r.value;
+const rc = ROLE_COLOR[r] || colors.textSecondary;
+const selected = createForm.role === r;
 return (
 <TouchableOpacity
-key={r.value}
+key={r}
 style={[styles.roleChip, selected && { backgroundColor: rc + '20', borderColor: rc }]}
-onPress={() => setCreateForm((p: typeof createForm) => ({ ...p, role: r.value }))}
+onPress={() => setCreateForm((p: typeof createForm) => ({ ...p, role: r }))}
+accessibilityRole="radio"
+accessibilityState={{ checked: selected }}
 >
 <Text style={[styles.roleChipText, selected && { color: rc, fontWeight: fontWeight.semibold }]}>
-{r.label}
+{getRoleLabel(r)}
 </Text>
 </TouchableOpacity>
 );
