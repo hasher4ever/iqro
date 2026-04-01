@@ -1,11 +1,7 @@
-Git commit, push, and deploy to production. Minimum output.
+Run these bash commands sequentially. No explanations, no diffs, no code review. Just execute and report pass/fail.
 
-Commit message: $ARGUMENTS
-
-Run these bash commands sequentially. Stop on any error.
-
-1. `git add -A && git commit -m "$ARGUMENTS"`
-2. `git push`
-3. `npm run deploy:all`
-
-Do not explain. Just run the commands and report success/failure.
+```
+git add -A && git commit -m "auto deploy at $(TZ=Asia/Tashkent date '+%Y-%m-%d %H:%M %Z')"
+git push
+npm run deploy:all
+```

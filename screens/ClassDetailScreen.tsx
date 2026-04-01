@@ -52,6 +52,17 @@ const [editSaving, setEditSaving] = useState(false);
 const [showEditTeacherPicker, setShowEditTeacherPicker] = useState(false);
 const [editTeacherSearch, setEditTeacherSearch] = useState('');
 
+const filteredEditTeachers = useMemo(() => {
+if (!teachers) return [];
+if (!editTeacherSearch) return teachers;
+const q = editTeacherSearch.toLowerCase();
+return teachers.filter((tc: any) =>
+(tc.name || '').toLowerCase().includes(q) || (tc.email || '').toLowerCase().includes(q) || (tc.phone || '').toLowerCase().includes(q)
+);
+}, [teachers, editTeacherSearch]);
+
+const selectedEditTeacher = teachers?.find((tc: any) => tc._id === editForm.teacherId);
+
 if (students === undefined || me === undefined || classData === undefined) return <ScreenLoader />;
 
 const isAdmin = me?.role === 'super_admin' || me?.role === 'admin';
@@ -96,17 +107,6 @@ try { await removeEnrollment({ enrollmentId: enrollmentId as any }); } catch (e:
   showAlert(t('error'), e?.message || t('error_generic'));
 }
 };
-
-const filteredEditTeachers = useMemo(() => {
-if (!teachers) return [];
-if (!editTeacherSearch) return teachers;
-const q = editTeacherSearch.toLowerCase();
-return teachers.filter((tc: any) =>
-(tc.name || '').toLowerCase().includes(q) || (tc.email || '').toLowerCase().includes(q) || (tc.phone || '').toLowerCase().includes(q)
-);
-}, [teachers, editTeacherSearch]);
-
-const selectedEditTeacher = teachers?.find((tc: any) => tc._id === editForm.teacherId);
 
 const openEditModal = () => {
 if (!classData) return;
