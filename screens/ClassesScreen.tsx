@@ -9,8 +9,7 @@ import { showAlert, formatMoney } from '../lib/utils';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Card, Button, Input, ScreenLoader, EmptyState, Badge, SectionTitle } from '../components/UI';
 import { ScreenHeader } from '../components/ScreenHeader';
-
-const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+import { DAYS } from '../lib/constants';
 const PAGE_SIZE = 4;
 
 type ScheduleEntry = { days: string[]; startTime: string; endTime: string };
@@ -123,8 +122,14 @@ showAlert(t('error'), t('invalid_teacher_share') || 'Teacher share must be 0-100
 return;
 }
 const priceValid = form.billingType === 'per_month' ? !!form.monthlyPrice : !!form.pricePerClass;
-if (!form.name || !form.subjectName || !form.teacherId || !form.roomId || !priceValid) {
-setError('Fill all required fields');
+const missing: string[] = [];
+if (!form.name) missing.push(t('class_name'));
+if (!form.subjectName) missing.push(t('subject'));
+if (!form.teacherId) missing.push(t('teacher'));
+if (!form.roomId) missing.push(t('room'));
+if (!priceValid) missing.push(form.billingType === 'per_month' ? t('monthly_price') : t('price_per_class'));
+if (missing.length > 0) {
+setError(t('fill_required_fields') + ': ' + missing.join(', '));
 return;
 }
 if (scheduleEntries.length === 0) {
@@ -397,6 +402,9 @@ setTeacherSearch('');
 
 {/* Room selector */}
 <Text style={styles.label}>{t('room')}</Text>
+{rooms && rooms.length === 0 ? (
+<Text style={styles.dropdownEmpty}>{t('no_rooms_hint')}</Text>
+) : (
 <ScrollView horizontal style={styles.pickerRow} showsHorizontalScrollIndicator={false}>
 {rooms?.map((r: any) => (
 <TouchableOpacity
@@ -410,6 +418,7 @@ onPress={() => setForm({ ...form, roomId: r._id })}
 </TouchableOpacity>
 ))}
 </ScrollView>
+)}
 
 <Text style={styles.label}>{t('grading_system')}</Text>
 <View style={styles.pickerRow}>

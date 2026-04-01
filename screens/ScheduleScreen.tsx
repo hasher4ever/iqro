@@ -7,23 +7,7 @@ import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/them
 import { t, getLanguage } from '../lib/i18n';
 import { ScreenLoader } from '../components/UI';
 import Ionicons from '@expo/vector-icons/Ionicons';
-
-const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-
-function getDayLabel(day: string): string {
-  const lang = getLanguage();
-  const idx = { en: 0, ru: 1, uz_latin: 2, uz_cyrillic: 3 }[lang] ?? 0;
-  const labels: Record<string, string[]> = {
-    monday: ['MO', 'ПО', 'DU', 'ДУ'],
-    tuesday: ['TU', 'ВТ', 'SE', 'СЕ'],
-    wednesday: ['WE', 'СР', 'CH', 'ЧО'],
-    thursday: ['TH', 'ЧТ', 'PA', 'ПА'],
-    friday: ['FR', 'ПТ', 'JU', 'ЖУ'],
-    saturday: ['SA', 'СБ', 'SH', 'ША'],
-    sunday: ['SU', 'ВО', 'YA', 'ЯК'],
-  };
-  return labels[day]?.[idx] ?? day.slice(0, 2).toUpperCase();
-}
+import { DAYS } from '../lib/constants';
 
 // Get Monday of the week for a given date
 function getMonday(d: Date): Date {
@@ -303,7 +287,7 @@ const styles = getStyles();
                 styles.dayHeaderText,
                 i === todayIndex && styles.todayHeaderText,
               ]}>
-                {getDayLabel(day)}
+                {t(day)}
               </Text>
             </View>
           ))}
